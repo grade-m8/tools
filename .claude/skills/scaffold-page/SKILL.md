@@ -19,13 +19,15 @@ Example: `/scaffold-page ExamDetail /exams/:examId teacher,admin`
 
 Read at least one existing page in the target `frontend/` repo first (its component structure, how it fetches data, how it's wired into the route table) and match that concrete pattern rather than inventing a new one. If none exists yet, this is the first page — build it directly from the conventions below, and it becomes the reference afterward.
 
+Also check `../../../../design-system/src/screens/` for a matching composed screen (Login, PanelDeControl, MisCursos, ConfiguracionExamenIA, EditorDePreguntas, TomarExamen, Auditoria, EntregasDelExamen, MisExamenes — each a `.stories.tsx`) before laying out the page — it shows how the individual components combine into this exact screen's structure, which components it's built from, and what states/variants each needs, so the page's structure isn't guessed at from scratch. This is the composition-level counterpart to what `scaffold-component` uses for a single component; see [Design systems & tokens](../../../wiki/08-design-systems-and-tokens.md).
+
 ## What to generate
 
-1. **A page component** — following the loading/success/error state pattern described in [Frontend basics](../../wiki/07-frontend-basics.md): plain component state (no data-fetching library — see MENTOR.md's noted convention), a `useEffect`-driven fetch on mount, and conditional rendering per state.
+1. **A page component** — following the loading/success/error state pattern described in [Frontend basics](../../../wiki/07-frontend-basics.md): plain component state (no data-fetching library — see MENTOR.md's noted convention), a `useEffect`-driven fetch on mount, and conditional rendering per state.
 
-2. **A typed API call** — for the resource this page needs, following the "one file per resource, wrapping a shared typed fetch helper" pattern (see [REST APIs](../../wiki/02-rest-apis.md) for the request/response shape it should expect back from the backend). Don't add a data-fetching/caching library — that's a deliberate project-wide choice, not an oversight to "fix."
+2. **A typed API call** — for the resource this page needs, following the "one file per resource, wrapping a shared typed fetch helper" pattern (see [REST APIs](../../../wiki/02-rest-apis.md) for the request/response shape it should expect back from the backend). Don't add a data-fetching/caching library — that's a deliberate project-wide choice, not an oversight to "fix."
 
-3. **A route table entry**, wrapped in the role-gating mechanism for the given allowed roles (see [Auth & roles](../../wiki/04-auth-and-roles.md)) — redirecting anyone else away rather than rendering the page and hoping the backend rejects it. The backend must independently enforce the same role check on any endpoint this page calls — the frontend gate is a UX nicety, never the real security boundary.
+3. **A route table entry**, wrapped in the role-gating mechanism for the given allowed roles (see [Auth & roles](../../../wiki/04-auth-and-roles.md)) — redirecting anyone else away rather than rendering the page and hoping the backend rejects it. The backend must independently enforce the same role check on any endpoint this page calls — the frontend gate is a UX nicety, never the real security boundary.
 
 ## The teaching step (required, not optional)
 

@@ -26,6 +26,6 @@ A **single-page app** doesn't reload the whole page for every navigation — ins
 
 ## Where components get their look from
 
-Components describe structure and behavior; how they actually look (colors, spacing, fonts) is a separate concern, covered next.
+Components describe structure and behavior; how they actually look (colors, spacing, fonts) is a separate concern, covered next — and in this project, never invented from scratch. `../design-system/` (a sibling directory to `frontend/`) has every component already built and every screen already composed as a Storybook reference — see [Design systems & tokens](./08-design-systems-and-tokens.md) for exactly where to look before building any new page or component.
 
 Next: [Design systems & tokens](./08-design-systems-and-tokens.md) — where a button's exact color and padding actually come from.

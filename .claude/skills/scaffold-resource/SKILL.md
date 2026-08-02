@@ -5,7 +5,7 @@ description: Generate a new REST resource vertical slice (Zod schema, repository
 
 # Scaffold a backend resource
 
-Use this skill when adding a new Firestore-backed REST resource to the rebuild's `backend/` repo (e.g. "exams," "enrollments"). It generates the mechanical wiring for one resource, following the layering described in `../../wiki/10-grade-m8-architecture.md` and `../../MENTOR.md` — you (or the requesting dev) still fill in real business logic and choose correct role gating.
+Use this skill when adding a new Firestore-backed REST resource to the rebuild's `backend/` repo (e.g. "exams," "enrollments"). It generates the mechanical wiring for one resource, following the layering described in `../../../wiki/10-grade-m8-architecture.md` and `../../../MENTOR.md` — you (or the requesting dev) still fill in real business logic and choose correct role gating.
 
 ## Usage
 
@@ -23,15 +23,15 @@ This skill assumes at least one resource already exists in the target `backend/`
 
 Given `<ResourceName>` (PascalCase, e.g. `Enrollment`) and its field list, create five files:
 
-1. **A schema file** — request/response validation (Zod, per the project's stack) for creating (and, if the resource supports partial updates, updating) the resource, built from the given fields. This is the only place shape validation lives — see [REST APIs](../../wiki/02-rest-apis.md) on why validation happens once, at the boundary.
+1. **A schema file** — request/response validation (Zod, per the project's stack) for creating (and, if the resource supports partial updates, updating) the resource, built from the given fields. This is the only place shape validation lives — see [REST APIs](../../../wiki/02-rest-apis.md) on why validation happens once, at the boundary.
 
-2. **A repository file** — the *only* file allowed to query the database for this resource (create, find-by-id, and whatever list queries the resource's natural access patterns need — ask which fields need list-by queries if it's not obvious, e.g. "list enrollments by subject"). See [Databases & Firestore](../../wiki/03-databases-and-firestore.md) for why this boundary exists.
+2. **A repository file** — the *only* file allowed to query the database for this resource (create, find-by-id, and whatever list queries the resource's natural access patterns need — ask which fields need list-by queries if it's not obvious, e.g. "list enrollments by subject"). See [Databases & Firestore](../../../wiki/03-databases-and-firestore.md) for why this boundary exists.
 
 3. **A service file** — wraps the repository with real business logic (timestamps, computed fields, cross-resource checks). Keep it as thin as the reference resource unless this one genuinely needs more — don't invent validation the schema already covers.
 
-4. **A controller file** — parses the request against the schema, calls the service, shapes the HTTP response (status code + body, per [REST APIs](../../wiki/02-rest-apis.md)). No business logic here — an `if` belongs in the service, not here.
+4. **A controller file** — parses the request against the schema, calls the service, shapes the HTTP response (status code + body, per [REST APIs](../../../wiki/02-rest-apis.md)). No business logic here — an `if` belongs in the service, not here.
 
-5. **A routes file** — one route per controller method, gated with authentication + the appropriate role check (see [Auth & roles](../../wiki/04-auth-and-roles.md)) — check with the requesting dev which roles should reach each endpoint if it isn't already decided; don't guess.
+5. **A routes file** — one route per controller method, gated with authentication + the appropriate role check (see [Auth & roles](../../../wiki/04-auth-and-roles.md)) — check with the requesting dev which roles should reach each endpoint if it isn't already decided; don't guess.
 
 Then mount the new router alongside the other resources' routers.
 
@@ -43,4 +43,4 @@ After generating the files, walk through what got created in plain terms before 
 
 - Don't invent fields, endpoints, or role rules that weren't specified — ask rather than guessing.
 - Don't add tests, docs, or abstractions beyond the five files + mounting — this skill is mechanical scaffolding, not a full feature implementation.
-- Don't touch database security rules unless the resource genuinely needs a new client-direct read pattern (rare — see the one documented exception in [Async jobs & queues](../../wiki/06-async-jobs-and-queues.md); most resources are API-only).
+- Don't touch database security rules unless the resource genuinely needs a new client-direct read pattern (rare — see the one documented exception in [Async jobs & queues](../../../wiki/06-async-jobs-and-queues.md); most resources are API-only).

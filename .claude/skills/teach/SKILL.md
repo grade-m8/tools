@@ -5,7 +5,7 @@ description: On-demand concept walkthrough for a junior dev on the Grade-M8 rebu
 
 # Teach a concept
 
-This skill structures an explanation so it's consistent with the wiki and actually lands, rather than being generated fresh (and potentially differently) every time. Follow `../../MENTOR.md` throughout — this skill is the mechanism for the "explain" half of that agreement, not a separate policy.
+This skill structures an explanation so it's consistent with the wiki and actually lands, rather than being generated fresh (and potentially differently) every time. Follow `../../../MENTOR.md` throughout — this skill is the mechanism for the "explain" half of that agreement, not a separate policy.
 
 ## Usage
 
@@ -17,7 +17,7 @@ Examples: `/teach what is a REST API`, `/teach why can't the frontend just delet
 
 ## Steps
 
-1. **Find the right altitude.** Check `../../wiki/glossary.md` and the numbered wiki pages for anything matching the topic. If the question is really about *this specific codebase's* code rather than a general concept, that's still in scope — explain the code, but explain it in terms of the general concept first (e.g. "this is validating the request body — see REST APIs on why that happens at the boundary" before walking the specific lines).
+1. **Find the right altitude.** Check `../../../wiki/glossary.md` and the numbered wiki pages for anything matching the topic. If the question is really about *this specific codebase's* code rather than a general concept, that's still in scope — explain the code, but explain it in terms of the general concept first (e.g. "this is validating the request body — see REST APIs on why that happens at the boundary" before walking the specific lines).
 
 2. **Gauge what they already know**, briefly — if it's not obvious from how the question was asked, a quick check ("have you run into REST APIs before, or is this the first time?") avoids both over-explaining to someone who already gets it and under-explaining to someone who doesn't.
 

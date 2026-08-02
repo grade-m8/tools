@@ -23,4 +23,15 @@ A separate design-system project (built in Storybook — a tool for building and
 
 Grade-M8 deliberately chose reference-only, given multiple independent repos with no shared package between them (see [10-grade-m8-architecture.md](./10-grade-m8-architecture.md)) — worth understanding as a real tradeoff, not a default, since "just import it" would genuinely be simpler if that decision were made differently.
 
+## Where to actually look, in this project
+
+`../design-system/` (a sibling directory to `frontend/`) is the concrete reference for every piece of frontend UI work, and should be the first thing opened before building any screen or component — not memory, not guessing at what "looks about right":
+
+- `design-system/src/foundations/` — the tokens themselves: color scale, spacing, typography, elevation, as Storybook stories you can browse visually rather than just reading raw values.
+- `design-system/src/components/<category>/` — every individual component, already organized by category (`buttons/`, `forms/`, `badges/`, `data-display/`, `layout/`, `navigation/`, `grading/` — grading-specific UI like rubric/analysis displays). Each component has a matching `.stories.tsx` showing its variants and states.
+- `design-system/src/screens/` — full composed screens (Login, Panel de Control, Mis Cursos, Configuración del Examen IA, Editor de Preguntas, Tomar Examen, Auditoría, Entregas del Examen, Mis Exámenes), showing how components combine into a real layout — the right place to look when building a whole page, not just one component.
+- Run it locally with Storybook (see the `storybook` launch config in `../.claude/launch.json`, or `npm run storybook --prefix design-system`) to browse all of the above interactively rather than reading source — seeing the rendered variants is usually faster than reading the component's code to understand what it should look like.
+
+`scaffold-component` (for one component) and `scaffold-page` (for a whole screen) both start from this directory — see `.claude/skills/`.
+
 Next: [Deployment & environments](./09-deployment-environments.md) — how "it works on my laptop" becomes something real users can reach.
