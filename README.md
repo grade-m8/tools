@@ -6,7 +6,16 @@ This directory is the support system for rebuilding Grade-M8 from scratch with t
 
 - **[MENTOR.md](./MENTOR.md)** — the working agreement. Read this first. It defines how Claude should behave across the whole rebuild: teacher and coder at once, defaulting to checking in rather than assuming.
 - **[wiki/](./wiki/)** — a concept reference, written for absolute beginners, covering everything the stack will require: how the web works, REST APIs, Firestore, auth, Docker, async job queues, React basics, design tokens, and deployment. `wiki/10-grade-m8-architecture.md` is the one page specific to this product — the data model, API surface, and grading pipeline, told as a narrative.
-- **[.claude/skills/](./.claude/skills/)** — scaffolding skills for once real coding starts: generating a backend resource, a frontend page, or porting a design-system component. Each one ends with an explanation step, not just silent file generation. `scaffold-page` and `scaffold-component` both start by pointing at `../design-system/` — its Storybook has every component and every full screen already built as the visual reference for anything the frontend needs.
+- **[.claude/skills/](./.claude/skills/)** — repeatable workflows for once real coding starts:
+  - *Scaffolding*: `scaffold-resource` (backend REST resource), `scaffold-page` (frontend route), `scaffold-component` (port a design-system component). Each ends with an explanation step, not just silent file generation. `scaffold-page`/`scaffold-component` both start by pointing at `../design-system/` — its Storybook has every component and every full screen already built as the visual reference for anything the frontend needs.
+  - *Process*: `teach` (structured concept walkthrough), `commit` (runs a repo's lint/typecheck/test/build gate, checks for secrets and branch safety, then commits in this project's established message structure — never a reflexive `git add -A && git commit`).
+- **[.claude/agents/](./.claude/agents/)** — subagents built on top of the skills above, grouped by what they own:
+  - *Build*: `frontend-dev` (routes/screens/components, reaching for `scaffold-page`/`scaffold-component`), `backend-dev` (REST resources, reaching for `scaffold-resource`), `ai-grading-engineer` (the LMStudio prompt/response/retry internals — the architecture's highest-risk piece).
+  - *Cross-cutting*: `integration-dev` (keeps the two independent repos' hand-duplicated shared types and API contracts from drifting), `firebase-expert` (Firestore rules, custom claims, Cloud Tasks/queue config, emulator/deploy topology), `qa` (reviews already-written code against this project's specific conventions — not a generic linter), `teacher` (wraps `teach` for on-demand concept explanations).
+  - *Occasional*: `gherkin-writer` (turns a design-system screen into Gherkin acceptance criteria — a spec artifact, not test automation; MENTOR.md's no-E2E-for-v1 decision stays intact), `release-checklist` (runs the dev/prod deploy checklist, always confirms before touching prod).
+  - *Meta*: `agent-builder` (creates new agents for this roster, following the same pattern all the above follow, and keeps this README section in sync afterward).
+
+  Invoke one directly when a task is clearly single-purpose (e.g. "have the qa agent look at this PR"); for mixed tasks, default Claude behavior already covers the same ground.
 
 ## How to use this, if you're one of the two devs
 
@@ -18,7 +27,14 @@ Load `MENTOR.md` before starting any work session on the rebuild — it's the pe
 
 ## Portability caveat
 
-Claude Code discovers skills by walking up from the current working directory. These skills live at `tools/.claude/skills/` and will only be auto-discovered when working from inside `tools/`. Once the real `backend/` and `frontend/` rebuild repos are created (as siblings of this directory, same layout as the current reference repos), copy the relevant skill folders into each new repo's own `.claude/skills/` — `scaffold-resource` belongs in `backend/`, `scaffold-page` and `scaffold-component` belong in `frontend/`, and `teach` is useful in either. Do the same with `MENTOR.md`: drop its content into each new repo's `CLAUDE.md` so the working agreement travels with the code, not just with this reference directory.
+Claude Code discovers skills and agents by walking up from the current working directory. These skills and agents live at `tools/.claude/skills/` and `tools/.claude/agents/` and will only be auto-discovered when working from inside `tools/`. Once the real `backend/` and `frontend/` rebuild repos are created (as siblings of this directory, same layout as the current reference repos), copy the relevant skill and agent files into each new repo's own `.claude/skills/`/`.claude/agents/`:
+
+  - `backend/`: `scaffold-resource` skill; `backend-dev`, `ai-grading-engineer` agents.
+  - `frontend/`: `scaffold-page`, `scaffold-component` skills; `frontend-dev`, `gherkin-writer` agents.
+  - Either (or both): `teach`, `commit` skills; `qa`, `teacher`, `integration-dev`, `firebase-expert`, `release-checklist` agents — none of them reference paths outside `wiki/`/`MENTOR.md`/skill names, so they work from either repo, and `integration-dev`/`release-checklist` in particular expect to see both repos as siblings regardless of which one they're copied into.
+  - **Not copied**: `agent-builder` stays in `tools/` only — its job is authoring/maintaining this whole roster against this README, which doesn't exist inside `backend/`/`frontend/` once split, so copying it there would leave it with no roster to check overlap against or update.
+
+Do the same with `MENTOR.md`: drop its content into each new repo's `CLAUDE.md` so the working agreement travels with the code, not just with this reference directory.
 
 ## What this system deliberately doesn't do
 
