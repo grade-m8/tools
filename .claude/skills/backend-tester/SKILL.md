@@ -20,19 +20,19 @@ Antes de crear cualquier test, verifica si la infraestructura de testing (`setup
 - **Si ya existe:** Continúa directamente con la creación de los tests funcionales.
 
 ## 3. Tipos de Tests y Estructura de Carpetas
-En backend aplican principalmente dos tipos de tests, que debes agrupar organizadamente en la carpeta `functions/src/test/`:
--   **Tests Unitarios (Lógica pura / Utils):** Para lógica de negocio que no toca la base de datos. Mocks permitidos.
+En backend aplican principalmente dos tipos de tests, que debes agrupar organizadamente en la carpeta `functions/test/` (fuera de `src/` para evitar que `tsc` los compile hacia `lib/` en producción):
+-   **Tests Unitarios (Lógica pura / Utils):** Para lógica de negocio que no toca la base de datos. Guárdalos en `functions/test/unit/`. Mocks permitidos.
 -   **Tests de Integración (Services / Repositories / Functions):** Para código que interactúa con Firestore o Auth. Usa los Emuladores locales (no mockees Firestore). Necesitan wrapping (`testEnv.wrap()`) para las Cloud Functions.
--   **Organización:** Agrupa los tests en subcarpetas ordenadas según su capa arquitectónica (ej. `test/controller/`, `test/service/`, `test/repository/`). Si la carpeta para el componente ya existe, guarda el test allí.
+-   **Organización:** Agrupa los tests en subcarpetas ordenadas según su capa arquitectónica dentro de `functions/test/` (ej. `functions/test/controller/`, `functions/test/service/`, `functions/test/repository/`). Si la carpeta para el componente ya existe, guarda el test allí.
 
 ## 4. Aislamiento y Limpieza Global
 -   **Aislamiento (`clearFirestore`):** Usa esta utilidad solo en tests de integración que modifiquen o lean Firestore.
--   **Limpieza Global:** No dupliques llamadas de limpieza (`cleanup`) si ya están en `setup.ts`.
+-   **Limpieza Global:** No dupliques llamadas de limpieza (`cleanup`) si ya están en `functions/test/setup.ts`.
 
 ## 5. Roles y Creación de "Seeds" (Fixtures)
 El sistema maneja tres tipos de usuarios clave: **Admin**, **Professor** y **Student**. 
 -   **Cobertura Multi-Rol:** Cuando pruebes validaciones de acceso o flujos de información, asegúrate de escribir casos para los tres roles. Por ejemplo, validar que un *Admin* sí puede hacer algo que un *Student* tiene prohibido.
--   **Generación de Seeds:** Para no repetir código en cada test ensuciando el archivo, **debes crear funciones utilitarias o factorías** (ej. dentro de `functions/src/test/utils/`) que se encarguen de popular (seed) la base de datos de los emuladores con perfiles de estos roles, y con todos los elementos vinculados a ellos que la función necesite (materias, clases, exámenes, etc.). Si esos seeders ya existen, reutilízalos.
+-   **Generación de Seeds:** Para no repetir código en cada test ensuciando el archivo, **debes crear funciones utilitarias o factorías** (ej. dentro de `functions/test/utils/`) que se encarguen de popular (seed) la base de datos de los emuladores con perfiles de estos roles, y con todos los elementos vinculados a ellos que la función necesite (materias, clases, exámenes, etc.). Si esos seeders ya existen, reutilízalos.
 
 ## 6. Comportamiento a Testear (Casos)
 Asegúrate de cubrir los siguientes escenarios:
