@@ -26,7 +26,7 @@ Antes de crear o modificar cualquier archivo, analiza el repositorio `backend` p
 
 ### ⚠️ Reglas Críticas (Lo que NO debes hacer)
 1. **NO buscar ni crear un segundo Docker Compose ni Dockerfile de tests** (como `docker-compose.test.yml` o `Dockerfile.test`). El proyecto usa un único `docker-compose.yml` en la raíz de `backend/` para los emuladores locales (`npm run docker:up`). La suite de tests se ejecuta directamente con Jest vía `npm test`.
-2. **NO buscar ni crear `setup.ts` ni `clearFirestore()` / `emulatorTools.ts`**. La arquitectura del proyecto desacopla los servicios mediante Inyección de Dependencias (`src/di/container.ts`), por lo que los tests unitarios prueban los servicios inyectando mocks de repositorios y servicios externos sin necesidad de conectarse a emuladores ni limpiar colecciones.
+2. **PROHIBIDO CREAR O BUSCAR `setup.ts` (ni inicializaciones globales con `initializeApp`, `getApps`, etc.)**: Jest **NO** utiliza ningún archivo `setup.ts` (no existe `setupFilesAfterEnv` en `jest.config.cjs`). Los tests unitarios corren directamente en memoria inyectando los mocks tipados de `functions/test/mock/`. Crear un `setup.ts` con `initializeApp` es código muerto/innecesario en este repositorio. Tampoco intentes modificar `jest.config.cjs` para forzar la carga de un archivo setup.
 3. **NO colocar carpetas de test dentro de `functions/src/`**. La compilación de TypeScript (`tsc`) emite código hacia `functions/lib/` tomando `functions/src/` como raíz; los tests deben residir siempre en `functions/test/` para no contaminar el build productivo.
 
 ## 2. Pasos para Crear o Reparar Infraestructura (Solo si no existe)

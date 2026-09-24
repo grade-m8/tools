@@ -49,6 +49,7 @@ When testing a service:
 
 ## 5. What NOT to Do
 
+- **DO NOT create a `setup.ts` file or initialize Firebase globally:** The project does NOT use a global `setup.ts`, `test/setup.ts`, or any Firebase initialization boilerplate (`initializeApp`, `getApps`, etc.). Jest runs unit tests purely in memory using the mock factories in `functions/test/mock/`. Creating a `setup.ts` or modifying `jest.config.cjs` to add `setupFilesAfterEnv` is strictly forbidden because it introduces dead code and unwanted Firebase coupling.
 - **DO NOT alter production code silently when finding a bug:** If a test discovers a bug in production code, do NOT change the production code on your own. Keep the test, explain the failure, and report the bug to the developer.
 - **DO NOT weaken tests:** Never use `it.skip` or remove assertions to make a test pass.
 - **DO NOT create a second Docker Compose or Dockerfile:** The project uses a single `docker-compose.yml` for emulators. Unit tests run locally on the host with Jest without needing Docker.

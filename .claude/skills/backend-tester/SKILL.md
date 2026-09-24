@@ -18,7 +18,7 @@ A menos que el usuario te indique un archivo específico, tu objetivo es testear
 Antes de crear cualquier test, verifica que Jest esté operativo:
 - Ejecuta `npm test` desde la raíz de `backend` (o dentro de `backend/functions`).
 - Si la suite responde correctamente (ej. el `sanity.test.ts` y tests unitarios existentes pasan), continúa con la creación de tests.
-- **Importante:** NO busques ni intentes crear `setup.ts`, `clearFirestore()`, ni un Dockerfile o Docker Compose secundario de tests. El backend ya tiene su entorno configurado y funcional. Si falta configuración base en Jest, recurre a `backend-test-setup`.
+- **PROHIBIDO CREAR `setup.ts`:** NO crees archivos `setup.ts`, ni scripts que importen `initializeApp` o `getApps` de Firebase. Los tests unitarios no interactúan con el SDK real de Firebase; las dependencias externas se simulan exclusivamente con los mocks tipados de `functions/test/mock/`. Jest no usa ningún archivo setup global en este repositorio. Tampoco intentes crear Dockerfiles de tests o compose secundarios. Si falta configuración base en Jest, recurre a `backend-test-setup`.
 
 ## 3. Arquitectura del Backend y Estructura de Tests
 
