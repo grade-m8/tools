@@ -1,54 +1,93 @@
 ---
 name: backend-tester
 description: >-
-  Use this skill to create, modify, and execute tests for the newly created or modified backend code
-  in the current branch. It will automatically set up the testing infrastructure if it doesn't exist.
+  Use this skill to create, modify, and execute tests for backend code in the current branch,
+  respecting the project's dependency-injection architecture, folder hierarchy, and Jest mocks.
 ---
 
 # Backend Tester Skill
 
-Usa esta skill para escribir tests sobre el código en el que el desarrollador está trabajando.
+Usa esta skill para escribir y ejecutar tests sobre el código del backend (`backend/functions/`).
 
 ## 1. Identificar el Código a Testear
-A menos que el usuario te indique un archivo específico, tu objetivo es testear lo que se acaba de hacer en esta rama:
-- Utiliza comandos de git (ej. `git status` o `git diff --name-status main...HEAD`) para identificar los archivos de lógica de negocio (Cloud Functions, Repositories, Services) que han sido creados o modificados recientemente.
-- Enfoca la creación de tests exclusivamente en ese código nuevo o alterado.
+A menos que el usuario te indique un archivo específico, tu objetivo es testear lo que se acaba de implementar o modificar en la rama:
+- Utiliza comandos de git (ej. `git status` o `git diff --name-status main...HEAD`) para identificar los archivos nuevos o modificados (Services, Middlewares, Controllers, Repositories).
+- Enfoca la creación de tests exclusivamente en ese código.
 
-## 2. Verificar y Preparar la Infraestructura
-Antes de crear cualquier test, verifica si la infraestructura de testing (`setup.ts`, Docker de tests, Jest configurado) existe en el proyecto.
-- **Si no existe o está incompleta:** DEBES detenerte y aplicar primero las reglas de la skill `backend-test-setup` para crear y validar el entorno. Una vez que el entorno esté en verde, puedes continuar.
-- **Si ya existe:** Continúa directamente con la creación de los tests funcionales.
+## 2. Verificar la Infraestructura de Testing
+Antes de crear cualquier test, verifica que Jest esté operativo:
+- Ejecuta `npm test` desde la raíz de `backend` (o dentro de `backend/functions`).
+- Si la suite responde correctamente (ej. el `sanity.test.ts` y tests unitarios existentes pasan), continúa con la creación de tests.
+- **Importante:** NO busques ni intentes crear `setup.ts`, `clearFirestore()`, ni un Dockerfile o Docker Compose secundario de tests. El backend ya tiene su entorno configurado y funcional. Si falta configuración base en Jest, recurre a `backend-test-setup`.
 
-## 3. Tipos de Tests y Estructura de Carpetas
-En backend aplican principalmente dos tipos de tests, que debes agrupar organizadamente en la carpeta `functions/test/` (fuera de `src/` para evitar que `tsc` los compile hacia `lib/` en producción):
--   **Tests Unitarios (Lógica pura / Utils):** Para lógica de negocio que no toca la base de datos. Guárdalos en `functions/test/unit/`. Mocks permitidos.
--   **Tests de Integración (Services / Repositories / Functions):** Para código que interactúa con Firestore o Auth. Usa los Emuladores locales (no mockees Firestore). Necesitan wrapping (`testEnv.wrap()`) para las Cloud Functions.
--   **Organización:** Agrupa los tests en subcarpetas ordenadas según su capa arquitectónica dentro de `functions/test/` (ej. `functions/test/controller/`, `functions/test/service/`, `functions/test/repository/`). Si la carpeta para el componente ya existe, guarda el test allí.
+## 3. Arquitectura del Backend y Estructura de Tests
 
-## 4. Aislamiento y Limpieza Global
--   **Aislamiento (`clearFirestore`):** Usa esta utilidad solo en tests de integración que modifiquen o lean Firestore.
--   **Limpieza Global:** No dupliques llamadas de limpieza (`cleanup`) si ya están en `functions/test/setup.ts`.
+### Arquitectura de Código (`functions/src/`):
+- **Capas:** `routes` → `controllers` → `services` → `repositories`.
+- **Inyección de Dependencias (DI):** Los servicios (`src/service/<dominio>/`) no interactúan directamente con Firestore ni con Firebase Auth; en su lugar, reciben interfaces tipadas definidas en `src/types/<dominio>/` (ej: `UserRepository`, `AuthService`, `SubjectRepository`) inyectadas en su constructor (`src/di/container.ts`).
+- **Validaciones:** Se realizan en los controladores a través de esquemas o en middlewares (`src/middleware/`).
 
-## 5. Roles y Creación de "Seeds" (Fixtures)
-El sistema maneja tres tipos de usuarios clave: **Admin**, **Professor** y **Student**. 
--   **Cobertura Multi-Rol:** Cuando pruebes validaciones de acceso o flujos de información, asegúrate de escribir casos para los tres roles. Por ejemplo, validar que un *Admin* sí puede hacer algo que un *Student* tiene prohibido.
--   **Generación de Seeds:** Para no repetir código en cada test ensuciando el archivo, **debes crear funciones utilitarias o factorías** (ej. dentro de `functions/test/utils/`) que se encarguen de popular (seed) la base de datos de los emuladores con perfiles de estos roles, y con todos los elementos vinculados a ellos que la función necesite (materias, clases, exámenes, etc.). Si esos seeders ya existen, reutilízalos.
+### Jerarquía de Pruebas (`functions/test/` fuera de `src/`):
+Los tests se ubican obligatoriamente fuera de `src/` para evitar que `tsc` los compile hacia `lib/`:
+- **`functions/test/unit/`**: Contiene las suites de pruebas unitarias (`*.test.ts`). Aquí se testea la lógica de negocio de los servicios, validaciones y middlewares de forma rápida y aislada.
+- **`functions/test/mock/`**: Contiene las factorías de mocks para las interfaces de repositorios y servicios externos (`MockUserRepository.ts`, `MockAuthService.ts`, etc.).
+- **`functions/test/integration/`**: Reservado exclusivamente para pruebas de integración contra los emuladores locales de Firebase si son requeridas explícitamente. (La convención por defecto del proyecto prioriza pruebas unitarias con mocks tipados).
 
-## 6. Comportamiento a Testear (Casos)
-Asegúrate de cubrir los siguientes escenarios:
--   **Happy path:** Comportamiento esperado con datos válidos.
--   **Validaciones:** Faltan datos, formato incorrecto, duplicados.
--   **Autenticación y Roles:** Pruebas estrictas simulando las peticiones como Admin, Professor y Student.
--   **Casos Borde (Edge cases):** Arreglos vacíos, strings larguísimos, concurrencia (si aplica), o qué pasa cuando se busca un recurso que no existe.
--   **Errores Esperados:** Excepciones correctas cuando fallan las dependencias.
+## 4. Patrón de Mocking y Aislamiento en Pruebas Unitarias
 
-## 7. Ejecución y Errores (REGLAS DE ORO)
-1.  Ejecuta los tests usando el comando oficial (`npm test`).
-2.  Si el test falla por un error tuyo al escribirlo, **corrígelo**.
-3.  **REGLA DE ORO:** Si descubres un bug real en el código de producción, **NUNCA alteres el código de producción silenciosamente**. Repórtalo. Nunca debilites un test (`it.skip`) para ocultar un bug.
+Para testear un servicio (ejemplo `UserService` o `SubjectService`):
+1. **Reutilizar o crear el Mock del Repositorio/Servicio:**
+   - En `functions/test/mock/Mock<Interface>.ts`, exporta una función constructora con mocks de Jest tipados:
+     ```typescript
+     import type UserRepository from '../../src/types/user/userRepo';
+
+     export const makeMockUserRepository = (): jest.Mocked<UserRepository> => ({
+       getUserById: jest.fn(),
+       getAllByInstitution: jest.fn(),
+       getUserByEmail: jest.fn(),
+       createUser: jest.fn(),
+     });
+     ```
+2. **Instanciar el Servicio en el Test:**
+   - En `functions/test/unit/<service>.test.ts`, instancia el servicio inyectándole los mocks creados:
+     ```typescript
+     let userRepo: jest.Mocked<UserRepository>;
+     let authService: jest.Mocked<AuthService>;
+     let userService: UserService;
+
+     beforeEach(() => {
+       userRepo = makeMockUserRepository();
+       authService = makeMockAuthService();
+       userService = new UserService(userRepo, authService);
+     });
+
+     afterEach(() => {
+       jest.restoreAllMocks();
+     });
+     ```
+3. **Aislamiento:** No se necesita emulador ni `clearFirestore()` para los tests unitarios. Cada test configura el comportamiento de sus mocks con `mockResolvedValue`, `mockRejectedValue`, etc., y se asegura la limpieza con `jest.restoreAllMocks()` en `afterEach`.
+
+## 5. Roles y Fixtures
+
+El sistema define roles de usuario (`UserRole`) en `src/types/user/userRole.ts`: `'Admin'`, `'Professor'`, y `'Student'`.
+- **Pruebas de Autorización:** Cuando pruebes middlewares de autenticación/permisos (`src/middleware/auth.ts`) o lógica dependiente de roles, incluye casos para los tres roles.
+- **Fixtures:** Define DTOs tipados (ej. `CreateUserDto`) como constantes en el archivo de test o como fixtures reutilizables para mantener las aserciones legibles.
+
+## 6. Casos a Cubrir
+- **Happy path:** Flujo esperado con datos válidos y retornos correctos.
+- **Validaciones y Errores de Negocio:** Validación de entradas, recursos inexistentes (`undefined` o excepciones controladas).
+- **Mapeo de Errores:** Verificar que las fallas de repositorios o servicios dependientes se propaguen o transformen según lo esperado.
+- **Casos Borde (Edge cases):** Arreglos vacíos, strings vacíos o límites numéricos.
+
+## 7. Ejecución y Reglas de Oro
+1. **Ejecuta los tests:**
+   - Desde la raíz del backend: `npm test`
+   - O desde `functions/`: `npm test`
+2. Si un test falla por un error en su implementación o aserción, **corrígelo**.
+3. **REGLA DE ORO:** Si descubres un bug real en el código de producción, **NUNCA alteres el código de producción silenciosamente**. Repórtalo con claridad en tu resumen. Nunca desactives un test (`it.skip` o `xit`) para enmascarar un bug.
 
 ## 8. Formato de Reporte (Para el Developer)
-Al finalizar, SIEMPRE debes responder utilizando estrictamente este formato, incluyendo una guía paso a paso para que el developer pueda correr los tests:
+Al finalizar, responde utilizando estrictamente este formato:
 
 ```text
 ## Testing Completado
@@ -57,10 +96,10 @@ Al finalizar, SIEMPRE debes responder utilizando estrictamente este formato, inc
 - [Lista de archivos revisados]
 
 **Tests creados/modificados:**
-- [Lista de archivos de test afectados]
+- [Lista de archivos de test y mocks afectados]
 
 **Casos cubiertos:**
-- [Resumen de casos testeados, destacando los casos borde y roles probados]
+- [Resumen de casos testeados, roles y casos borde]
 
 **Resultado:**
 ✓ XX tests passed
@@ -73,15 +112,16 @@ Al finalizar, SIEMPRE debes responder utilizando estrictamente este formato, inc
 
 ### 🚀 Cómo correr estos tests tú mismo
 
-Para levantar el entorno y correr la suite localmente, abre tu terminal y sigue estos pasos:
+Para ejecutar la suite localmente desde tu terminal:
 
-1. **Levantar los emuladores de Firebase:** Asegúrate de tener Docker corriendo, ve a la carpeta que contiene el docker-compose y levanta los servicios:
-   `docker-compose up -d emulators`
-2. **Ejecutar los tests:** En otra terminal, muévete a la carpeta del backend y corre Jest:
-   `cd backend/functions`
-   `npm test`
-3. **Interpretar Resultados:**
-   - Jest te mostrará un resumen verde si todo pasó (✓) o rojo si algo falló (✗).
-   - Si algo falla, el mensaje de Jest te indicará exactamente qué aserción no se cumplió y en qué línea del archivo `.test.ts`.
-   - Recuerda que puedes usar `npm run test:watch` para que los tests se re-ejecuten automáticamente cada vez que guardas un cambio.
+1. **Ejecutar todos los tests:**
+   `npm test` (desde la raíz de `backend/` o dentro de `backend/functions/`)
+
+2. **Ejecutar en modo interactivo (Watch):**
+   `cd functions && npm run test:watch`
+
+3. **Verificar cobertura:**
+   `cd functions && npm run test:coverage`
+
+*(Nota: Los tests unitarios utilizan mocks tipados y no requieren tener Docker ni los emuladores de Firebase encendidos. Si necesitas levantar los emuladores para desarrollo general o pruebas manuales, hazlo con `npm run docker:up` desde la raíz de `backend`).*
 ```
