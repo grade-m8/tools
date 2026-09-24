@@ -38,6 +38,11 @@ Antes de crear o modificar cualquier archivo, analiza el repositorio `backend` p
    - Toda prueba que requiera emuladores de Firebase se ejecuta **exclusivamente mediante `firebase emulators:exec`** (`npm run test:emulators`), levantando emuladores efímeros limpios en RAM sin persistencia.
 2. **PROHIBIDO CREAR O BUSCAR `setup.ts` GLOBAL (ni inicializaciones globales de Firebase en la raíz de test)**: Jest **NO** utiliza ningún archivo `setup.ts` global (no existe `setupFilesAfterEnv` en `jest.config.cjs`). Los tests unitarios corren directamente en memoria inyectando los mocks tipados de `functions/test/mock/`. Solo los archivos dentro de `functions/test/integration/` inicializan la conexión local en su propio scope.
 3. **NO colocar carpetas de test dentro de `functions/src/`**. La compilación de TypeScript (`tsc`) emite código hacia `functions/lib/` tomando `functions/src/` como raíz; los tests deben residir siempre en `functions/test/`.
+4. **PROHIBIDO HARDCODEAR RUTAS DEL SISTEMA O SINTAXIS ESPECÍFICA DE UN OS EN `package.json`**:
+   - Los scripts de `package.json` deben ser **100% agnósticos y portables** (compatibles con Linux/GitHub Actions, macOS y Windows).
+   - **NUNCA** incluyas rutas absolutas de una máquina específica (`C:\Users\...`, `/home/...`).
+   - **NUNCA** utilices comandos dependientes de un shell específico como `set PATH=... &&` o `export PATH=...`.
+   - Java es un requisito del entorno del sistema para los emuladores de Firebase. Si Java no está en el PATH, debe resolverse a nivel del sistema operativo (`PATH`/`JAVA_HOME`) o indicarlo al usuario, **nunca** ensuciando los scripts de `package.json`.
 
 ## 2. Pasos para Crear o Reparar Infraestructura (Solo si no existe)
 
