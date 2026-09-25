@@ -14,7 +14,7 @@ The system is split into three independent projects: a **design system** (a Stor
 
 Roughly, in the order a teacher would create them:
 
-- **Users** — everyone who logs in, each with a role (teacher, student, or admin) that determines what they can do (see [Auth & roles](./04-auth-and-roles.md)).
+- **Users** — everyone who logs in, each with a role (`Professor`, `Student`, or `Admin`; "teacher" in prose means `Professor`) that determines what they can do (see [Auth & roles](./04-auth-and-roles.md)).
 - **Subjects** — a course a teacher owns; students enroll into it.
 - **Exams**, belonging to a subject — each exam has a set of **questions** (the actual prompts) and a set of **rubric criteria** (what's being graded for, and how heavily each criterion counts).
 - **Submissions** — one per student per exam attempt, tracking its own lifecycle (started, submitted, being graded, reviewed, or errored) and rolling up a running score as its individual answers get graded.

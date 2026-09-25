@@ -17,7 +17,7 @@ Tokens expire and get refreshed periodically, which is invisible to the user in 
 
 ## Roles: where "what can you do" lives
 
-A **role** (`teacher`, `student`, `admin` in Grade-M8) is a label attached to a user that authorization decisions are based on. The important design question is: *where does the role actually live*, because that determines how trustworthy it is.
+A **role** (in Grade-M8 the exact strings are `Professor`, `Student` and `Admin`, identical in the backend and the frontend) is a label attached to a user that authorization decisions are based on. The important design question is: *where does the role actually live*, because that determines how trustworthy it is.
 
 - Storing role as a plain field in the database, read by the frontend, is **not sufficient on its own** for security — the frontend is running on the user's own machine; a motivated user can inspect and change what their own client-side code does or believes.
 - The trustworthy source is the **token itself** — Firebase supports attaching **custom claims** (arbitrary extra data, like a role) directly to a user's auth token, signed by Firebase. Because the token is cryptographically signed, the server can trust the role claim inside it without a separate database lookup, and the user can't forge it themselves.
@@ -31,8 +31,16 @@ Grade-M8 checks authorization in two places:
 1. **The backend**, on every relevant endpoint — verify the token, then check the role is allowed to do this specific thing. This is the layer that actually matters; it's where real logic and database access happens.
 2. **Database-level security rules**, which matter *only* for the one case where the frontend reads data directly from the database without going through the backend (see [Async jobs & queues](./06-async-jobs-and-queues.md)) — everywhere else, requests go through the backend API, which bypasses these rules entirely (the backend uses admin-level database access, since it's a trusted server, not an end-user client). Don't rely on database rules as your only line of defense for anything reachable through the API — they're a backstop for the one client-direct-read case, not the primary enforcement mechanism.
 
+The frontend also checks roles, to decide which screens to show. That check is only for the user's convenience. Anyone can change what their own browser does, so the backend has to check again on every request.
+
+In Grade-M8 the `Admin` role passes every role check, on both sides. You don't need to list it on each route, but it also means an Admin reaches every endpoint, so the code behind each one has to behave sensibly for an Admin.
+
+## Role is not ownership
+
+A role answers "what *kind* of user are you?", not "is this *yours*?". Knowing that someone is a `Professor` only tells you they may create exams in general. It doesn't tell you this particular exam belongs to them. So besides the role check, the backend has to check ownership: load the resource and compare its owner (e.g. `exam.teacherId`) with the user making the request. When a request moves or links something (for example, changing which subject an exam belongs to), the user must own the *destination* too, not just the original. Grade-M8 avoids that case by making such fields unchangeable after creation.
+
 ## Bootstrapping: the chicken-and-egg problem
 
-If "only an admin can grant the admin role" is a rule enforced by the API, how does the *first* admin ever get created? Something has to set that first role outside the normal request flow — typically a one-off script run manually with elevated credentials, used exactly once (or rarely) to seed the first admin, after which everything else goes through the normal role-granting endpoint.
+If "only an admin can grant the admin role" is a rule enforced by the API, how does the *first* admin ever get created? Something has to set that first role outside the normal request flow — typically a one-off script run manually with elevated credentials, used exactly once (or rarely) to seed the first admin, after which everything else goes through the normal user-creation endpoint. In Grade-M8 that script is `npm run seed:admin` (`scripts/seedAdmin.ts`), and later users are created by an admin through `POST /users`.
 
 Next: [Docker & local dev](./05-docker-and-local-dev.md) — how you run a backend, database, and auth system on your own laptop without touching anything real.

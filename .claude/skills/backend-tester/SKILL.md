@@ -82,7 +82,7 @@ El sistema define roles de usuario (`UserRole`) en `src/types/user/userRole.ts`:
 ## 6. Ejecución y Reglas de Oro
 1. **Ejecuta los tests:**
    - Para tests unitarios rápidos: `npm test`
-   - Para suite completa con emuladores efímeros: `npm run test:emulators`
+   - Para suite completa con emuladores efímeros: `npm run test:emulators` (hoy el script no existe; si hacen falta tests de integración, primero usá `backend-test-setup` para agregarlo)
    - Para ver cobertura: `npm run test:coverage`
 2. Si un test falla por un error en su implementación o aserción, **corrígelo**.
 3. **REGLA DE ORO:** Si descubres un bug real en el código de producción, **NUNCA alteres el código de producción silenciosamente**. Repórtalo con claridad en tu resumen. Nunca desactives un test (`it.skip` o `xit`) para enmascarar un bug.

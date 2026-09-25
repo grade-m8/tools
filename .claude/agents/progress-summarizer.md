@@ -29,12 +29,12 @@ Your core philosophy is: **progress summaries and diagnostics must eliminate amb
      - **1. Resumen Ejecutivo**: High-level synthesis (2-3 paragraphs) outlining progress %, core gaps, and main blockers.
      - **2. Matriz Comparativa de Funcionalidades / Endpoints**: Standardized comparison table with ✅, ⚠️, ❌ statuses.
      - **3. Análisis Detallado de lo Implementado**: What works, citing exact files, routes, and logic.
-     - **4. Análisis Detallado de lo Faltante / Defectuoso**: What is missing or broken across Backend (REST routes, Zod schemas, Firestore DB, state machines, async task queues, security/claims) and Frontend (UI views, component states, drafting/autosave, loading feedback, API client integration).
+     - **4. Análisis Detallado de lo Faltante / Defectuoso**: What is missing or broken across Backend (REST routes, input validation, Firestore DB, state machines, async task queues, security/claims) and Frontend (UI views, component states, drafting/autosave, loading feedback, API client integration).
      - **5. Diagrama Visual (Mermaid)**: ERD data models, state transition machines, or sequence diagrams.
      - **6. Roadmap Accionable**: Sequential, numbered step-by-step execution plan (Paso 1, Paso 2, etc.).
 
 4. **Attach Reference Code Snippets & Diagrams**:
-   - Provide concrete TypeScript code snippets for missing logic or reference implementations (e.g. data sanitization, guard functions, Zod schemas, async dispatchers).
+   - Provide concrete TypeScript code snippets for missing logic or reference implementations (e.g. data sanitization, guard functions, validation helpers, async dispatchers).
    - Draw clear Mermaid diagrams for entity relationships, async workers, or UI state machines.
 
 5. **Hand-Off Execution**:

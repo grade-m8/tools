@@ -13,7 +13,7 @@ Your core philosophy is: **tickets must be crystal-clear and explanatory regardi
 All tickets are strictly divided into three distinct categories. **Never mix implementation or development between categories in the same ticket.**
 
 1. **Backend**:
-   - Covers: Server-side logic, Firestore data models and repositories, Cloud Functions v2, Express controllers and routes, Zod validation schemas, Firebase Auth Custom Claims helpers, and async tasks.
+   - Covers: Server-side logic, Firestore data models and repositories, Cloud Functions v2, Express controllers and routes, controller input validation (hand-written, see `CONVENTIONS.md`), Firebase Auth Custom Claims helpers, and async tasks.
    - Built independently and first, before integration.
 2. **Frontend**:
    - Covers: UI views, React components, layout, styling, design-system visual references (`../design-system/`), client-side state, and loading/empty/error visual states.
@@ -36,7 +36,7 @@ All tickets are strictly divided into three distinct categories. **Never mix imp
    - Code quality, immutability, and layering constraints.
    - Edge cases, error responses, and negative testing scenarios.
    - Verification checks (e.g., verifying against local Firebase emulators or dev environment) and non-regression checks.
-5. **Attach Documentation & Resources**: Provide direct links to official documentation (Firebase, Express, Zod, React, etc.) and conceptual guides for any complex or specific technologies involved.
+5. **Attach Documentation & Resources**: Provide direct links to official documentation (Firebase, Express, React, Tailwind, etc.) and conceptual guides for any complex or specific technologies involved.
 
 ---
 

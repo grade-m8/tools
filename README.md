@@ -5,6 +5,7 @@ This directory is the support system for rebuilding Grade-M8 from scratch with t
 ## What's here
 
 - **[MENTOR.md](./MENTOR.md)** — the working agreement. Read this first. It defines how Claude should behave across the whole rebuild: teacher and coder at once, defaulting to checking in rather than assuming.
+- **[CONVENTIONS.md](./CONVENTIONS.md)** — how the code on `dev` is actually built (backend, frontend, cross-repo contract, testing/CI), plus features planned but not yet built and known debt. Every agent and skill that writes or reviews code checks against it; update it when a convention changes.
 - **[wiki/](./wiki/)** — a concept reference, written for absolute beginners, covering everything the stack will require: how the web works, REST APIs, Firestore, auth, Docker, async job queues, React basics, design tokens, and deployment. `wiki/10-grade-m8-architecture.md` is the one page specific to this product — the data model, API surface, and grading pipeline, told as a narrative.
 - **[.claude/skills/](./.claude/skills/)** — repeatable workflows for once real coding starts:
   - *Scaffolding*: `scaffold-resource` (backend REST resource), `scaffold-page` (frontend route), `scaffold-component` (port a design-system component). Each ends with an explanation step, not just silent file generation. `scaffold-page`/`scaffold-component` both start by pointing at `../design-system/` — its Storybook has every component and every full screen already built as the visual reference for anything the frontend needs.

@@ -11,20 +11,22 @@ description: >-
 When the user asks you to review a ticket and its PR, you must act as a QA Lead and perform a rigorous analysis based on the following guidelines:
 
 ## Automating Data Fetching via GitHub CLI
-Si el usuario únicamente te proporciona el enlace de un issue (ej. `https://github.com/grade-m8/backend/issues/25`), DEBES utilizar tu herramienta de ejecutar comandos en la terminal (`run_command`) para obtener la información usando `gh`:
+Si te dan un enlace de issue o de PR (ej. `https://github.com/grade-m8/backend/issues/25`), usá la herramienta `Bash` para obtener la información con `gh`:
 
-1.  Extrae el nombre del repositorio (`grade-m8/backend`) y el número de issue (`25`).
-2.  Lee los detalles del ticket ejecutando: `gh issue view 25 --repo grade-m8/backend`
-3.  Encuentra la PR asociada buscando el número del ticket en las PRs: `gh pr list --state open --search 25 --repo grade-m8/backend` (también puedes probar `--state all` si ya está mergeada o cerrada).
-4.  Una vez identificado el número de la PR, obtén el código modificado ejecutando: `gh pr diff <numero_pr> --repo grade-m8/backend`
-5.  Si necesitas más contexto de la PR, puedes usar `gh pr view <numero_pr> --repo grade-m8/backend`.
-6.  Con todo este contexto descargado, procede a hacer la revisión.
+1.  Extraé el repositorio (`grade-m8/backend`) y el número.
+2.  **Si te dieron un PR:** `gh pr view <pr> --repo <repo> --json number,title,body,headRefName,baseRefName,closingIssuesReferences`. El ticket es el de `closingIssuesReferences`; si viene vacío, las ramas se nombran `<numero-de-issue>-<slug>` (ej. `77-integración-413-...`), así que el número inicial de `headRefName` es el ticket.
+3.  **Si te dieron un issue:** buscá el PR por el prefijo de la rama: `gh pr list --repo <repo> --state all --json number,headRefName --jq '.[] | select(.headRefName | startswith("<issue>-"))'`. Si no aparece, probá `gh pr list --repo <repo> --state all --search "<issue>"`.
+4.  Leé el ticket: `gh issue view <issue> --repo <repo> --comments`.
+5.  Obtené el diff: `gh pr diff <pr> --repo <repo>` y los archivos: `gh pr view <pr> --repo <repo> --json files`.
+6.  Leé los comentarios previos del PR (`gh pr view <pr> --repo <repo> --comments`) para no repetir observaciones ya resueltas.
+7.  Con todo este contexto, procedé con la revisión.
 
 ## Review Objectives
 
-1.  **Requirement Fulfillment**: Check if the PR strictly fulfills the requirements specified in the ticket. Do not accept the PR if it fails to meet the core objectives or if it includes out-of-scope features (over-engineering).
+1.  **Requirement Fulfillment**: Check if the PR strictly fulfills the requirements specified in the ticket (names, types, props, files and acceptance criteria exactly as written). Do not accept the PR if it fails to meet the core objectives or if it includes out-of-scope features (over-engineering).
 2.  **Code Quality**: Analyze the code for code duplication, bad practices, and readability.
-3.  **Architecture and Best Practices**: Evaluate if the code follows good architectural patterns (e.g., SOLID principles, separation of concerns) appropriate for the codebase.
+3.  **Architecture and Best Practices**: Evaluate the code against `CONVENTIONS.md` (the project's source of truth) rather than generic patterns.
+4.  **Ticket vs. reality**: Tickets are sometimes wrong (wrong role names, a param marked optional that the backend requires, a missing file in the list). When the ticket contradicts `CONVENTIONS.md` or the actual backend contract, the backend/conventions win — say so explicitly, attribute it to the ticket (not the dev), and recommend the correct version.
 
 ## Constraints
 

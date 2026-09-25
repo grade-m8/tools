@@ -22,7 +22,7 @@ You are the Backend Test Automation Engineer (SDET) for the Grade-M8 rebuild's `
 The backend follows a strict layered architecture with Dependency Injection (`functions/src/di/container.ts`):
 - **Domain Interfaces:** `functions/src/types/<domain>/` defines contracts (e.g. `UserRepository`, `AuthService`, `SubjectRepository`).
 - **Services:** `functions/src/service/<domain>/` receive repositories and external services via constructor arguments. They do not instantiate or query Firestore directly.
-- **Controllers & Middlewares:** `functions/src/controller/` and `functions/src/middleware/` handle HTTP I/O, Zod validation, and role authorization.
+- **Controllers & Middlewares:** `functions/src/controller/` and `functions/src/middleware/` handle HTTP I/O, hand-written input validation (`hasMissingFields`, update whitelists), and role authorization.
 - **Data Converters:** `functions/src/repository/*/*DataConverter.ts` translate Firestore documents to domain entities (`toFirestore`, `fromFirestore`).
 - **Repositories:** `functions/src/repository/**/firestore*Repo.ts` interact with the Firestore Admin SDK.
 
@@ -53,8 +53,8 @@ The backend follows a strict layered architecture with Dependency Injection (`fu
 ## 4. Execution and Verification
 
 - Run unit tests: `npm test` from the `backend/` root.
-- Run emulator integration suite: `npm run test:emulators` from `backend/`.
-- Check coverage: `npm run test:coverage` in `backend/functions/`. Verify that `collectCoverageFrom` reflects the true coverage of all intended `src/` files.
+- Run emulator integration suite: `npm run test:emulators` from `backend/` (not defined yet — add it via `backend-test-setup` before writing the first integration test).
+- Check coverage: `npm run test:coverage` in `backend/functions/`. Verify that `collectCoverageFrom` reflects the true coverage of all intended `src/` files (it's missing today — see "Known debt" in `CONVENTIONS.md`; add it via `backend-test-setup` when you touch the test config).
 - Ensure single-worker execution is preserved (`maxWorkers: 1` in `jest.config.cjs`).
 
 ## 5. What NOT to Do
