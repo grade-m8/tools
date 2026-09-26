@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@playwright/mcp@0.0.82",
+        "--headless",
+        "--isolated",
+        "--viewport-size",
+        "1440,900",
+        "--output-dir",
+        "review-artifacts",
+        "--allowed-origins",
+        "http://localhost:5173;http://127.0.0.1:5173;http://localhost:5101;http://127.0.0.1:5101;http://localhost:9099;http://127.0.0.1:9099;http://localhost:8080;http://127.0.0.1:8080"
+      ]
+    }
+  }
+}

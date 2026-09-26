@@ -1,0 +1,32 @@
+{
+  "env": {
+    "REVIEW_MODE": "browser"
+  },
+  "permissions": {
+    "deny": [
+      "Edit",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(gh pr comment *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh pr review *)",
+      "Bash(gh pr close *)",
+      "Bash(gh pr edit *)",
+      "Bash(gh pr ready *)",
+      "Bash(gh api *)",
+      "Bash(gh repo create *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh repo fork *)",
+      "Bash(gh release *)",
+      "Bash(gh workflow *)",
+      "Bash(wget *)",
+      "Bash(rm *)"
+    ]
+  }
+}

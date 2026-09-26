@@ -15,7 +15,7 @@ Si te dan un enlace de issue o de PR (ej. `https://github.com/grade-m8/backend/i
 
 1.  Extraé el repositorio (`grade-m8/backend`) y el número.
 2.  **Si te dieron un PR:** `gh pr view <pr> --repo <repo> --json number,title,body,headRefName,baseRefName,closingIssuesReferences`. El ticket es el de `closingIssuesReferences`; si viene vacío, las ramas se nombran `<numero-de-issue>-<slug>` (ej. `77-integración-413-...`), así que el número inicial de `headRefName` es el ticket.
-3.  **Si te dieron un issue:** buscá el PR por el prefijo de la rama: `gh pr list --repo <repo> --state all --json number,headRefName --jq '.[] | select(.headRefName | startswith("<issue>-"))'`. Si no aparece, probá `gh pr list --repo <repo> --state all --search "<issue>"`.
+3.  **Si te dieron un issue:** buscá el PR por el prefijo de la rama: `gh pr list --repo <repo> --state all --json number,headRefName` y elegí el que empieza con `<issue>-`. Si no aparece, probá `gh pr list --repo <repo> --state all --search "<issue>"`. (Un comando por vez, sin pipes ni `--jq`: en modo revisión automática el guard los bloquea.)
 4.  Leé el ticket: `gh issue view <issue> --repo <repo> --comments`.
 5.  Obtené el diff: `gh pr diff <pr> --repo <repo>` y los archivos: `gh pr view <pr> --repo <repo> --json files`.
 6.  Leé los comentarios previos del PR (`gh pr view <pr> --repo <repo> --comments`) para no repetir observaciones ya resueltas.

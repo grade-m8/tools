@@ -1,0 +1,4 @@
+# Screenshots, plans and reports from automated PR browser tests (kept locally, never committed)
+review-artifacts/
+# Emulator logs written to the project dir when pr-browser-test starts the stack
+*-debug.log

@@ -174,7 +174,8 @@ Rules:
 - CD (`cd-deploy.yml`): push to `dev` deploys the dev project; push to `main` deploys prod (functions, rules, indexes).
 
 **Frontend**
-- **No automated tests** (no Jest, no UI/E2E). Don't request them and don't add a test runner without a team decision.
+- **No automated tests in the repo** (no Jest, no UI/E2E). Don't request them and don't add a test runner without a team decision.
+- The PR automation runs AI-driven browser checks from `tools` (`pr-browser-test`, against local emulators). They live entirely in `tools/`: nothing is added to the frontend repo, and a failing check shows up in the review comment, not as a CI status.
 - CI (`.github/workflows/ci.yml`, push/PR to `main`/`dev`): `lint` → `tsc --noEmit` → `build`.
 
 **Both:** Husky + lint-staged pre-commit (ESLint fix + Prettier). PRs target `dev`; `dev` → `main` for releases. Keep branches merged with `origin/dev` before review so the diff only shows the ticket's changes.
