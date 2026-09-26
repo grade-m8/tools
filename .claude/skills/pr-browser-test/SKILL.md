@@ -82,10 +82,10 @@ For each scenario:
 - Start clean: `browser_close`, then log in through the landing page as the scenario's user.
 - Work from `browser_snapshot` (the accessibility tree) to find elements. Check the expected result with `browser_wait_for` or the snapshot text, not by assumption.
 - **Injecting an API error** (`api-error`): after logging in, use `browser_evaluate` to wrap `window.fetch` so requests whose URL contains the target path (e.g. `/subjects/owned`) resolve to `new Response(JSON.stringify({ error: 'internal-error', message: 'x' }), { status: 500 })`. Then reach the screen by **clicking** inside the app, not by reloading (a reload restores `fetch`).
-- **On a failure**, or when the console shows an uncaught error: `browser_take_screenshot` with filename `<run>/<ID>-fail.png`, then collect `browser_console_messages` and the failing `browser_network_requests`.
-- On a pass for a `ticket:` scenario, take `<run>/<ID>-ok.png` as evidence.
+- **On a failure**, or when the console shows an uncaught error: `browser_take_screenshot` with filename `review-artifacts/<run>/<ID>-fail.png`, then collect `browser_console_messages` and the failing `browser_network_requests`.
+- On a pass for a `ticket:` scenario, take `review-artifacts/<run>/<ID>-ok.png` as evidence.
 
-Screenshot filenames are relative to `review-artifacts/`, the browser's output directory.
+Screenshot filenames are resolved from the project directory, so always start them with `review-artifacts/<run>/`. Anything else ends up outside the gitignored folder.
 
 **Done when** every scenario in `plan.md` is `ok`, `falla` or `bloqueado`, and each `falla` has a screenshot, the expected vs. actual result, and its console and network evidence.
 

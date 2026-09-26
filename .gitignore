@@ -2,3 +2,6 @@
 review-artifacts/
 # Emulator logs written to the project dir when pr-browser-test starts the stack
 *-debug.log
+# Safety net: screenshot dirs the browser may write relative to the project root
+/frontend-pr-*/
+/backend-pr-*/
