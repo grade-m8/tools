@@ -133,6 +133,7 @@ Repo `grade-m8/frontend`. React 19 + Vite + TypeScript, Tailwind v4, Shadcn prim
 - Shadcn variant tokens (`primary`, `secondary`, `muted`, `destructive`, …) are mapped in `@theme inline`; if a Shadcn variant looks unstyled, add the mapping there instead of hand-coloring the component.
 - Components: one exported component per file (small private sub-components in the same file are fine), props typed with an interface, no `any`. TSDoc is not required.
 - Forms: show field errors on blur **and** after a submit attempt (not only when "touched").
+- **Alignment is checked in every state**, including when validation errors are showing. Fields side by side in one row share the same label and field top line: rows of fields use `items-start`, never `items-end`/`items-center`, because an error message under one field would push the others out of line (frontend PR #110: "Criterio de evaluación" vs "Peso relativo"). An icon next to a single line of text is vertically centered with it (`items-center` on that row). No horizontal scroll at desktop widths. The browser test measures all of this with a 2px tolerance.
 - Truncated text gets a `title` attribute; interactive elements get `cursor-pointer`.
 
 ### Hygiene (enforced in review)

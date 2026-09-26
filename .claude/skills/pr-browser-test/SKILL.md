@@ -53,6 +53,7 @@ Cover, in this order:
    - `api-error`: the screen's API call fails (injected 500) → an error message or toast appears and the spinner stops.
    - `form-submit`: submitting with required fields empty → errors visible without touching the fields.
    - `navigation`: every link or button the change adds leads to a registered route, not `*` → `/`.
+   - `layout`: every changed screen passes the **layout audit** (step 5) in each state it can reach (initial, with validation errors, filled, empty list), at 1440px and 1024px wide. Always include this one for changed pages and components.
 
 **Users** (created by `seed.ts`, all with password `Password123!`): Professor `prof.turing@gradem8.com` (owns the seeded subjects and exams), Professor `prof.hopper@gradem8.com`, Students `ada.lovelace@gradem8.com`, `linus.torvalds@gradem8.com`, `margaret.hamilton@gradem8.com`, Admin `admin@gradem8.com` (created in step 4).
 
@@ -84,6 +85,7 @@ For each scenario:
 - **Injecting an API error** (`api-error`): after logging in, use `browser_evaluate` to wrap `window.fetch` so requests whose URL contains the target path (e.g. `/subjects/owned`) resolve to `new Response(JSON.stringify({ error: 'internal-error', message: 'x' }), { status: 500 })`. Then reach the screen by **clicking** inside the app, not by reloading (a reload restores `fetch`).
 - **On a failure**, or when the console shows an uncaught error: `browser_take_screenshot` with filename `review-artifacts/<run>/<ID>-fail.png`, then collect `browser_console_messages` and the failing `browser_network_requests`.
 - On a pass for a `ticket:` scenario, take `review-artifacts/<run>/<ID>-ok.png` as evidence.
+- **Layout audit** (`layout` scenarios, and at every state a scenario reaches on a changed screen, including the error state after submitting): `Read` `layout-audit.js` (next to this skill) and pass its **whole content, unchanged,** as the `function` of `browser_evaluate`. It measures the page and returns `findings` (`field-row`, `control-size`, `icon-text`, `overflow`, each with `deltaPx`, the row, its `align-items`, and the fields involved). It also outlines the offending elements in red. Any finding makes the scenario a `falla`. Take the screenshot right after the audit (`review-artifacts/<run>/<ID>-layout-<state>-<width>.png`) so the outline is visible, and record each finding with the state and width. Switch width with `browser_resize` (1440×900, then 1024×900).
 
 Screenshot filenames are resolved from the project directory, so always start them with `review-artifacts/<run>/`. Anything else ends up outside the gitignored folder.
 
@@ -111,7 +113,8 @@ Write `<tools>/review-artifacts/<run>/report.md`:
 ## Fallas
 
 ### <ID> — <title>
-- **Impacto sugerido:** blocker (ticket criterion) | major (trap) | minor (cosmetic)
+- **Impacto sugerido:** blocker (ticket criterion) | major (trap, including every `layout` finding) | minor (cosmetic)
+- **Layout (if any):** check · Δpx · state · width · fields · `align-items` of the row
 - **Pasos:** …
 - **Esperado:** … · **Obtenido:** …
 - **Consola / red:** …
