@@ -66,7 +66,7 @@ When called by `pr-review`, wrap the structure above with a fixed header and foo
 ```markdown
 > 🤖 **Revisión automática** — generada por IA a partir de `CONVENTIONS.md` y los agentes de QA de `grade-m8/tools`. Es orientativa: la aprobación final la hace una persona del equipo.
 >
-> **Veredicto:** <Aprobado | Requiere cambios | Rechazado> · **Commit revisado:** `<short sha>`
+> **Veredicto:** <Aprobado | Requiere cambios | Rechazado> · **Commit revisado:** `<short sha>` · **Tipo de tarea:** <profiles, e.g. `fe-view` + `integration`>
 
 <comment structure>
 

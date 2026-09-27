@@ -30,13 +30,17 @@ Work through the steps in order. Each ends on its **done when**.
 
 - Only `grade-m8/frontend` PRs. For anything else, stop and report it.
 - `sha` = `--sha` if given, else `headRefOid`; `sha7` = its first 7 characters. The **run** name is `frontend-pr-<n>-<sha7>`, and its artifacts dir is `<tools>/review-artifacts/<run>/`.
-- **In scope** only if the PR changes `src/pages/`, `src/components/`, `src/routes/`, `src/hooks/`, `src/services/`, `src/context/` or `src/index.css`. Otherwise write a one-line `report.md` ("sin cambios de UI: no se ejecutaron pruebas en navegador") and stop.
-- **Integrated** if the PR changes `src/services/`, `src/hooks/`, `src/types/` or `src/context/`, or its ticket calls a backend endpoint. Integrated runs also start the backend **functions** emulator (step 4), so screens hit the real API end to end.
+- **Classify the task** with `../pr-review/profiles.md` (ticket title plus changed files), the same way `pr-review` does. The profiles decide the run:
+  - `fe-view` or `integration` → **in scope**.
+  - `fe-component` → in scope **only if** a route already renders the component (search `src/pages/` and `src/routes/` for it). Otherwise write a one-line `report.md` ("componente sin ruta: se evalúa por contrato y código, sin pruebas en navegador") and stop.
+  - `hotfix` on the frontend → in scope, but plan only the fixed flow and its neighbours.
+  - `training`, or only backend/types/infra profiles → write a one-line `report.md` ("sin cambios de UI: no se ejecutaron pruebas en navegador") and stop.
+- **Integrated** (end to end with the Functions emulator, step 4) when the profiles include `integration`, and also for `fe-view` when its screens load data from the API. An `integration` run **must** be end to end: if the backend can't start, the whole run is `bloqueado`, not a UI-only run.
 - **Backend branch**: `dev`, unless the PR body or ticket links an open backend PR (`grade-m8/backend/pull/<m>` or `backend#<m>`). In that case use that PR's head, because the frontend change depends on it.
 
 Read the ticket (`closingIssuesReferences`, or the number at the start of the branch name) with `gh issue view <issue> --repo grade-m8/frontend --comments`, and the diff with `gh pr diff <n> --repo grade-m8/frontend`.
 
-**Done when** you know the run name, whether the PR is in scope and integrated, the backend branch, and the ticket's acceptance criteria as a list.
+**Done when** you know the run name, the profiles, whether the PR is in scope and integrated, the backend branch, and the ticket's acceptance criteria as a list.
 
 ## 3. Write the execution plan
 
@@ -104,7 +108,7 @@ Write `<tools>/review-artifacts/<run>/report.md`:
 ```markdown
 # Pruebas en navegador — frontend#<n> @ <sha7>
 
-- Backend: <branch or backend PR> · Modo: <integrado | solo UI> · Fecha: <date>
+- Backend: <branch or backend PR> · Modo: <integrado | solo UI> · Tipo de tarea: <profiles> · Fecha: <date>
 - Resultado: <ok> ok · <falla> fallas · <bloqueado> bloqueados
 
 | ID | Escenario | Rol | Resultado | Evidencia |
