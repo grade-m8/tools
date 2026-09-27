@@ -45,7 +45,9 @@ If earlier `ai-review` comments exist for older commits, this is a **re-review**
 - Ticket: the issue in `closingIssuesReferences`. Otherwise, the number the branch name starts with (`77-integración-…` → 77). Read it with `gh issue view <issue> --repo grade-m8/<repo> --comments`. If it isn't there, try the other repo. If there's no ticket, note "sin ticket vinculado" and review against the PR description.
 - CI: `gh pr checks <n> --repo grade-m8/<repo>`. Failing or pending checks are part of the review. Don't run lint/test/build yourself. With `--sha`, skip CI, since the checks belong to the current head.
 
-**Done when** you have the ticket's requirements as a list (or have noted there is none) and the status of every check.
+- Dependencies: `gh api repos/grade-m8/<repo>/issues/<issue>/dependencies/blocking` and `…/blocked_by`. Read each linked ticket (`gh issue view`). For each *blocking* ticket, look for its PR (branch starts with its number) and read how it uses this PR's output.
+
+**Done when** you have the ticket's requirements as a list (or have noted there is none), the status of every check, and, for each downstream (*blocking*) and upstream (*blocked by*) ticket, one line saying what it needs from this PR or what this PR should use from it.
 
 ## 4. Build the context dir
 
@@ -65,7 +67,7 @@ Read `CONVENTIONS.md` (in this repo, `tools`) yourself.
 
 ## 5. Run the reviewers
 
-Check the ticket yourself using the **Review Objectives** of the `qa-ticket-reviewer` skill (the ticket, the diff from `gh pr diff <n> --repo grade-m8/<repo>`, and `CONVENTIONS.md`).
+Check the ticket yourself using the **Review Objectives** of the `qa-ticket-reviewer` skill (the ticket, the diff from `gh pr diff <n> --repo grade-m8/<repo>`, and `CONVENTIONS.md`), including **dependencies between tickets**, in both directions.
 
 At the same time, dispatch these agents with `Agent`, in parallel:
 
@@ -77,8 +79,9 @@ At the same time, dispatch these agents with `Agent`, in parallel:
 
 Give each one this **brief**, filled in:
 
-> Review PR #<n> in grade-m8/<repo> (<title>), base `<base>`, head `<sha7>`, author @<author>. The code at the PR head is checked out at `<clone path>`; <other clones, if any>. Changed files: <list>. Ticket summary: <requirements>. CI: <status>. Read `CONVENTIONS.md` in the current project first; it overrides anything in your own instructions.
+> Review PR #<n> in grade-m8/<repo> (<title>), base `<base>`, head `<sha7>`, author @<author>. The code at the PR head is checked out at `<clone path>`; <other clones, if any>. Changed files: <list>. Ticket summary: <requirements>. Dependencies: <downstream tickets and what each needs from this PR; upstream tickets and what this PR should reuse>. CI: <status>. Read `CONVENTIONS.md` in the current project first; it overrides anything in your own instructions.
 > Read-only: don't run scripts or edit files (a guard blocks it). Use the diff (`gh pr diff <n> --repo grade-m8/<repo>`) and the clone.
+> Judge what this PR builds against the downstream tickets too: a component, hook, service or type another ticket will use must fit that use (`CONVENTIONS.md` → Cross-ticket contracts).
 > Report only problems **in lines this PR adds or changes, or directly caused by them**. "Known debt" counts only if the PR touches or worsens it. "Planned, not built yet" counts only if the PR introduces that feature.
 > For each finding return: `severity` (blocker | major | minor), `file:line` (at the PR head), `what` (one sentence), `why` (what breaks at runtime or for whom), `source` (CONVENTIONS.md section, wiki page, or ticket), `hint` (direction, not the finished code), `confidence` (high | medium). If you find nothing, say `none`. Also list up to 3 things the PR does well, each naming the file.
 

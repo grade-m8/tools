@@ -51,6 +51,9 @@ const READ_RULES = [
   rule(`^gh pr (?:view|diff|checks) ${NUM} ${REPO_FLAG}(?: ${SAFE_ARG})*$`),
   rule(`^gh pr list ${REPO_FLAG}(?: ${SAFE_ARG}| "[^"$]*")*$`),
   rule(`^gh issue view ${NUM} ${REPO_FLAG}(?: ${SAFE_ARG})*$`),
+  // Ticket dependency graph (GitHub issue dependencies), read-only GET. The only
+  // `gh api` call allowed: no -X/-f/--input can match this exact shape.
+  rule(`^gh api repos/${repoAlt(COMMENT_REPOS)}/issues/${NUM}/dependencies/(?:blocked_by|blocking)$`),
   // Clone the org's repos into the context dir (gh handles private-repo auth).
   rule(`^gh repo clone ${repoAlt(READ_REPOS)} ${CTX_PATH}(?: --(?: --depth ${NUM}| --branch ${SAFE_ARG}| --no-single-branch)*)?$`),
   rule(`^git clone(?: --depth ${NUM})?(?: --branch ${SAFE_ARG})? https://github\\.com/${repoAlt(READ_REPOS)}(?:\\.git)? ${CTX_PATH}$`),

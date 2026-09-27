@@ -18,15 +18,19 @@ Si te dan un enlace de issue o de PR (ej. `https://github.com/grade-m8/backend/i
 3.  **Si te dieron un issue:** buscá el PR por el prefijo de la rama: `gh pr list --repo <repo> --state all --json number,headRefName` y elegí el que empieza con `<issue>-`. Si no aparece, probá `gh pr list --repo <repo> --state all --search "<issue>"`. (Un comando por vez, sin pipes ni `--jq`: en modo revisión automática el guard los bloquea.)
 4.  Leé el ticket: `gh issue view <issue> --repo <repo> --comments`.
 5.  Obtené el diff: `gh pr diff <pr> --repo <repo>` y los archivos: `gh pr view <pr> --repo <repo> --json files`.
-6.  Leé los comentarios previos del PR (`gh pr view <pr> --repo <repo> --comments`) para no repetir observaciones ya resueltas.
-7.  Con todo este contexto, procedé con la revisión.
+6.  **Dependencias del ticket** (dependencias nativas de GitHub): `gh api repos/<repo>/issues/<issue>/dependencies/blocking` (tickets que van a usar lo que construye este PR) y `gh api repos/<repo>/issues/<issue>/dependencies/blocked_by` (tickets de los que depende). Leé cada uno con `gh issue view`. Si un ticket *blocking* ya tiene PR (su rama empieza con su número: `gh pr list --repo <repo> --state all --json number,headRefName`), leé su diff para ver cómo usa lo que construye este PR.
+7.  Leé los comentarios previos del PR (`gh pr view <pr> --repo <repo> --comments`) para no repetir observaciones ya resueltas.
+8.  Con todo este contexto, procedé con la revisión.
 
 ## Review Objectives
 
 1.  **Requirement Fulfillment**: Check if the PR strictly fulfills the requirements specified in the ticket (names, types, props, files and acceptance criteria exactly as written). Do not accept the PR if it fails to meet the core objectives or if it includes out-of-scope features (over-engineering).
 2.  **Code Quality**: Analyze the code for code duplication, bad practices, and readability.
 3.  **Architecture and Best Practices**: Evaluate the code against `CONVENTIONS.md` (the project's source of truth) rather than generic patterns.
-4.  **Ticket vs. reality**: Tickets are sometimes wrong (wrong role names, a param marked optional that the backend requires, a missing file in the list). When the ticket contradicts `CONVENTIONS.md` or the actual backend contract, the backend/conventions win — say so explicitly, attribute it to the ticket (not the dev), and recommend the correct version.
+4.  **Dependencias entre tickets** (`CONVENTIONS.md` → Cross-ticket contracts). Revisá en las dos direcciones:
+    - **Hacia adelante (blocking):** por cada ticket que va a usar lo que construye este PR, confirmá que el componente/hook/servicio/tipo sirve tal como ese ticket lo va a necesitar: estado controlado por el consumidor, callbacks que pasan IDs, datos emitidos con todos los campos que el backend exige, y nombres/tipos/rutas que el ticket siguiente espera importar. Si el ticket siguiente no se puede implementar como está escrito sin cambiar el código de este PR, es **bloqueante**. Si sólo lo complica, es **importante**. Citá el ticket siguiente en el hallazgo (ej. "el editor del #70 necesita saber qué pregunta está en edición").
+    - **Hacia atrás (blocked by):** confirmá que el PR usa lo que construyeron sus tickets previos respetando su contrato (lo importa, le pasa las props que espera, no lo reimplementa ni lo rodea con parches). Si el contrato del componente previo no alcanza, lo correcto es arreglarlo o señalarlo, no esquivarlo en la página.
+5.  **Ticket vs. reality**: Tickets are sometimes wrong (wrong role names, a param marked optional that the backend requires, a missing file in the list). When the ticket contradicts `CONVENTIONS.md` or the actual backend contract, the backend/conventions win — say so explicitly, attribute it to the ticket (not the dev), and recommend the correct version.
 
 ## Constraints
 

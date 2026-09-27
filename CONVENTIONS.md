@@ -6,7 +6,7 @@ Last synced against `dev`: backend `e0880c2`, frontend `4b5a782` (2026-09-24).
 
 **Keeping it true:** when a PR deliberately changes a convention, update this file in the same change set (or open a `tools` PR right after). If code and this file disagree and nobody decided to change the convention, the code is wrong. If they disagree because the team decided otherwise, this file is wrong — fix it.
 
-Sections: [Backend](#backend) · [Frontend](#frontend) · [Cross-repo contract](#cross-repo-contract) · [Testing & CI](#testing--ci) · [Planned, not built yet](#planned-not-built-yet) · [Known debt](#known-debt)
+Sections: [Backend](#backend) · [Frontend](#frontend) · [Cross-ticket contracts](#cross-ticket-contracts) · [Cross-repo contract](#cross-repo-contract) · [Testing & CI](#testing--ci) · [Planned, not built yet](#planned-not-built-yet) · [Known debt](#known-debt)
 
 ---
 
@@ -144,6 +144,16 @@ Repo `grade-m8/frontend`. React 19 + Vite + TypeScript, Tailwind v4, Shadcn prim
 - Error messages match the operation (no copy-pasted "failed to fetch" in `enroll`).
 
 ---
+
+## Cross-ticket contracts
+
+Tickets are linked with GitHub issue dependencies ("blocked by" / "blocking"). When a ticket builds something another ticket will use (a component, hook, service function, type or route), the PR is reviewed against **that next ticket** too, not only its own:
+
+- **Controlled components.** State the consumer owns (which item is being edited, selection, open/closed) comes in as props and goes out through callbacks. No copying a prop into local `useState` (frontend#117: `QuestionCard` copied `isEditing`, so the #70 editor couldn't enforce one-question-at-a-time).
+- **Callbacks carry identity.** `onEdit(id)`, `onDelete(id)`, not `onEdit()`, so the parent knows which item acted.
+- **Emitted data is complete.** What a component hands back (`onSave(question)`) includes every field the backend requires to persist it (frontend#117: `title` had no input, but `Question.title` is required).
+- **Names and types the next ticket will import exist as the ticket says** (frontend#84: `replaceQuestionsAndPublish` for the wizard's last step).
+- **A consumer uses what its blockers built, as designed**: import the component, pass the props it expects, don't rebuild it or work around its contract. If the contract doesn't fit, fix the component (or flag it) instead of patching around it in the page.
 
 ## Cross-repo contract
 

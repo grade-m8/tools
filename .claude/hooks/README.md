@@ -16,6 +16,7 @@ Both modes deny every tool call unless a rule allows it. They also deny any Bash
 **Shared (read-only):**
 - `Read`, `Grep`, `Glob`, `Skill`, `Agent`, `ToolSearch`, `TodoWrite`. Subagents' calls go through the same guard.
 - `gh pr view/diff/checks <n> --repo grade-m8/<repo>`, `gh pr list --repo …`, `gh issue view <n> --repo …`. `--repo` is required and limited to `grade-m8`.
+- `gh api repos/grade-m8/{backend,frontend}/issues/<n>/dependencies/{blocked_by,blocking}`: the ticket dependency graph. This exact read-only form is the only `gh api` call allowed. The static deny lists don't block `gh api` as a whole so this read works; the guard rejects every other shape.
 - `gh repo clone grade-m8/<repo> /tmp/grade-m8-review-ctx/<dir> [-- --depth N --branch X]`, `git -C /tmp/grade-m8-review-ctx/<dir> checkout <ref>`, read-only `git` (`fetch`, `diff`, `log`, `show`, `status`, `rev-parse`, `merge-base`, `ls-files`, `branch --list`), `ls`, `mkdir -p` of the scratch dirs. Branch names may contain accents.
 - MCP connector operations named `get_*`, `list_*`, `search_*`, `read_*`, `fetch_*`. Anything with merge/approve/push/delete/close/update/review/branch/fork is denied.
 
