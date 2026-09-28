@@ -13,7 +13,9 @@ Use this skill when adding a new screen/route to the rebuild's `frontend/` repo 
 /scaffold-page <PageName> <route-path> <roles-allowed>
 ```
 
-Example: `/scaffold-page ExamDetail /exams/:examId teacher,admin`
+Example: `/scaffold-page ExamDetail /teacher/exams/:examId Professor`
+
+Roles are `Professor` and `Student` (exact strings); `Admin` passes every gate automatically, so don't list it.
 
 ## Before generating: confirm the pattern exists to copy from
 
@@ -23,11 +25,11 @@ Also check `../../../../design-system/src/screens/` for a matching composed scre
 
 ## What to generate
 
-1. **A page component** — following the loading/success/error state pattern described in [Frontend basics](../../../wiki/07-frontend-basics.md): plain component state (no data-fetching library — see MENTOR.md's noted convention), a `useEffect`-driven fetch on mount, and conditional rendering per state.
+1. **A page component** in `src/pages/<Area>/<Name>Page.tsx` — following the loading/success/error state pattern described in [Frontend basics](../../../wiki/07-frontend-basics.md): the data loading lives in a `src/hooks/use<Thing>.ts` hook with plain state (no data-fetching library — see `CONVENTIONS.md` → Frontend), a `useEffect`-driven fetch, `try/catch` in the hook with a user-facing `toast.error`/error state, and conditional rendering per state in the page. While auth is still resolving (`!user || !role`), the hook waits instead of fetching or redirecting.
 
-2. **A typed API call** — for the resource this page needs, following the "one file per resource, wrapping a shared typed fetch helper" pattern (see [REST APIs](../../../wiki/02-rest-apis.md) for the request/response shape it should expect back from the backend). Don't add a data-fetching/caching library — that's a deliberate project-wide choice, not an oversight to "fix."
+2. **A typed API call** — in `src/services/<resource>Service.ts`, calling the shared `apiClient` (`apiClient.get/post/put/patch<T>`) — no raw `fetch`, no `httpsCallable` (see [REST APIs](../../../wiki/02-rest-apis.md) for the request/response shape it should expect back from the backend). Types go in `src/types/`, mirroring the backend's. Don't add a data-fetching/caching library — that's a deliberate project-wide choice, not an oversight to "fix."
 
-3. **A route table entry**, wrapped in the role-gating mechanism for the given allowed roles (see [Auth & roles](../../../wiki/04-auth-and-roles.md)) — redirecting anyone else away rather than rendering the page and hoping the backend rejects it. The backend must independently enforce the same role check on any endpoint this page calls — the frontend gate is a UX nicety, never the real security boundary.
+3. **A route table entry** in `src/routes/AppRouter.tsx`, inside a `<ProtectedRoutes allowedRoles={[...]}>` group for the given allowed roles (see [Auth & roles](../../../wiki/04-auth-and-roles.md)) — redirecting anyone else away rather than rendering the page and hoping the backend rejects it. The backend must independently enforce the same role check on any endpoint this page calls — the frontend gate is a UX nicety, never the real security boundary.
 
 ## The teaching step (required, not optional)
 

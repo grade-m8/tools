@@ -32,6 +32,17 @@ Grade-M8 deliberately chose reference-only, given multiple independent repos wit
 - `design-system/src/screens/` — full composed screens (Login, Panel de Control, Mis Cursos, Configuración del Examen IA, Editor de Preguntas, Tomar Examen, Auditoría, Entregas del Examen, Mis Exámenes), showing how components combine into a real layout — the right place to look when building a whole page, not just one component.
 - Run it locally with Storybook (see the `storybook` launch config in `../.claude/launch.json`, or `npm run storybook --prefix design-system`) to browse all of the above interactively rather than reading source — seeing the rendered variants is usually faster than reading the component's code to understand what it should look like.
 
+The design system lives in its own repo, `grade-m8/design-system`. Clone it next to `frontend/` so that `../design-system/` resolves.
+
 `scaffold-component` (for one component) and `scaffold-page` (for a whole screen) both start from this directory — see `.claude/skills/`.
+
+## How the frontend uses tokens today
+
+The frontend declares its tokens in `src/index.css` (the `@theme` blocks), and Tailwind turns each one into utility classes. Two kinds exist:
+
+- **Palette classes** such as `text-neutral-700` or `border-teal-600`. Most of the app uses these today, and they're accepted.
+- **Semantic classes** such as `bg-surface-card`, `text-text-secondary` or `bg-action-primary`. Prefer these for new components whenever one fits the role.
+
+A value that isn't a token is never OK: no hex codes and no arbitrary colors like `bg-[#0a6565]`. If you need a color that has no token yet, add the token to `index.css` first. Shadcn's own variables (`primary`, `secondary`, `muted`, …) are mapped to project tokens in `@theme inline`. If a Shadcn variant looks unstyled, add the mapping there instead of hand-coloring the component. [`CONVENTIONS.md`](../CONVENTIONS.md) has the full rules.
 
 Next: [Deployment & environments](./09-deployment-environments.md) — how "it works on my laptop" becomes something real users can reach.

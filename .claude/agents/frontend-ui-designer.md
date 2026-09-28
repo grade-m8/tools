@@ -60,4 +60,4 @@ Before designing or implementing any component or interface, read `MENTOR.md`, `
 - **Don't leave interactive states unhandled**: Never ship buttons or inputs that lack explicit `:focus-visible` or `:disabled` states.
 - **Don't cause Cumulative Layout Shift**: Never render uncontained async spinners or dynamic content that shifts neighboring layout elements on load.
 - **Don't mix arbitrary colors or font sizes**: Never use inline hex colors or non-standard font sizes outside the design token scale (`wiki/08-design-systems-and-tokens.md`).
-- **Don't import directly from `../design-system/`**: Design system code is reference-only; re-derive components using the frontend's own semantic tokens and utility classes.
+- **Don't import directly from `../design-system/`**: Design system code is reference-only; re-derive components using the tokens in `src/index.css` (semantic preferred, palette accepted, never hex/arbitrary — see `CONVENTIONS.md`).

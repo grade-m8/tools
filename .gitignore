@@ -1,0 +1,28 @@
+# --- Automated PR review output (pr-review / pr-browser-test) ---------------
+# Everything a review run produces stays local and is never committed.
+
+# Plans, screenshots, re-runnable specs and reports, one folder per run
+review-artifacts/
+
+# Safety net: run folders or screenshots written relative to the project root
+/frontend-pr-*/
+/backend-pr-*/
+/*.png
+/*.jpg
+/*.jpeg
+
+# Playwright: MCP default output dir, test-runner results, traces and videos
+.playwright-mcp/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+*.webm
+trace.zip
+/*-trace.zip
+
+# Firebase emulators started by the browser tests: logs and data exports
+*-debug.log
+firebase-export-*/
+emulator-data/
+.firebase/

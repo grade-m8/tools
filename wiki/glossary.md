@@ -18,7 +18,7 @@ One line each. Follow the link to the page with the full explanation.
 - **Authentication (auth)** — proving who you are (logging in). [→ Auth & roles](./04-auth-and-roles.md)
 - **Authorization** — once you know who someone is, deciding what they're allowed to do. [→ Auth & roles](./04-auth-and-roles.md)
 - **Token** — a signed piece of data proving "this request really came from a logged-in user," sent with every API call. [→ Auth & roles](./04-auth-and-roles.md)
-- **Role** — a label (like `teacher` or `student`) attached to a user that authorization checks are based on. [→ Auth & roles](./04-auth-and-roles.md)
+- **Role** — a label (in Grade-M8: `Professor`, `Student`, or `Admin`) attached to a user that authorization checks are based on. [→ Auth & roles](./04-auth-and-roles.md)
 - **Container** — a lightweight, self-contained bundle of an app + everything it needs to run, isolated from your actual machine. [→ Docker & local dev](./05-docker-and-local-dev.md)
 - **Docker** — the tool used to build and run containers. [→ Docker & local dev](./05-docker-and-local-dev.md)
 - **Emulator** — software that pretends to be a real cloud service, running locally, so you can develop without touching production. [→ Docker & local dev](./05-docker-and-local-dev.md)

@@ -17,7 +17,7 @@ Build the prompt from the question, its `idealAnswer`, the exam's weighted rubri
 ## Response parsing — the part most likely to break silently
 
 Never trust the model's raw output directly into Firestore. Parse defensively:
-- Validate the parsed JSON against a schema before using it (Zod, same as everywhere else in this backend) — a model that returns almost-right JSON, prose wrapped around JSON, or a missing field should fail loudly, not get written into `analysisItems` as if it were valid.
+- Validate the parsed JSON before using it — with an explicit type guard over `GradingResponse` (`types/grading/gradingJob.ts`), since the backend has no schema library today (adding Zod for this is a reasonable proposal, but raise it with the team and update `CONVENTIONS.md` rather than adding it silently). A model that returns almost-right JSON, prose wrapped around JSON, or a missing field should fail loudly, not get written into `analysisItems` as if it were valid.
 - On a parse/validation failure, treat it as a task failure (re-throw) so Cloud Tasks retries it — don't silently substitute a default/empty analysis and mark the answer graded.
 - `source: 'ai'` items are the only kind this pipeline writes, and once written they are **never overwritten** — a teacher's later edit creates a separate `source: 'teacher'` item that supersedes it. Don't write code here that mutates or deletes an existing AI-sourced item, even to "fix" a bad one; that's the teacher-review flow's job, not this pipeline's.
 
