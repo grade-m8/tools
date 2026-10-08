@@ -9,6 +9,8 @@
   //   control-size controls in one row must have the same height
   //   icon-text   an icon next to a single line of text must be vertically centered with it
   //   overflow    the page must not scroll horizontally
+  //   content-overflow  an element's content must not spill past its own box
+  //   clipped     content cut off by overflow:hidden needs text-overflow:ellipsis and a `title`
   const TOL = 2;
   const CONTROL =
     'input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea, [role=combobox]';
@@ -33,7 +35,13 @@
     const cls = [...el.classList].slice(0, 4).join('.');
     return `${el.tagName.toLowerCase()}${cls ? `.${cls}` : ''}`;
   };
-  const flag = (...els) => els.filter(Boolean).forEach((el) => flagged.add(el));
+  // Called right after each findings.push. A component harness wraps each state in
+  // [data-state], so the finding also says which state it was measured in.
+  const flag = (...els) => {
+    const last = findings[findings.length - 1];
+    if (last && !('state' in last)) last.state = els.find(Boolean)?.closest('[data-state]')?.dataset.state ?? null;
+    els.filter(Boolean).forEach((el) => flagged.add(el));
+  };
 
   // --- field-row / control-size -------------------------------------------
   for (const row of document.querySelectorAll('body *')) {
@@ -136,6 +144,41 @@
       fields: widest.map(text),
     });
     flag(...widest);
+  }
+
+  // --- content-overflow / clipped --------------------------------------------
+  // Content wider than its own box: either it spills out (overflow visible) or it
+  // is cut off (overflow hidden/clip) without an ellipsis and a `title`.
+  const isFormControl = (el) => el.matches('input, select, textarea, [role=combobox], [contenteditable]');
+  const isSrOnly = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.width <= 2 || r.height <= 2 || getComputedStyle(el).clip !== 'auto';
+  };
+  const overflowing = [];
+  for (const el of document.querySelectorAll('body *')) {
+    if (!isVisible(el) || isFormControl(el) || el.tagName === 'svg' || el.closest('svg')) continue;
+    const cs = getComputedStyle(el);
+    if (cs.display.startsWith('inline') && cs.display !== 'inline-block' && cs.display !== 'inline-flex') continue;
+    if (cs.overflowX === 'auto' || cs.overflowX === 'scroll') continue; // scrolls on purpose
+    if (el.clientWidth === 0 || el.scrollWidth <= el.clientWidth + TOL) continue;
+    const clipped = cs.overflowX === 'hidden' || cs.overflowX === 'clip';
+    if (clipped && (isSrOnly(el) || (cs.textOverflow === 'ellipsis' && el.closest('[title]')))) continue;
+    overflowing.push({ el, clipped, delta: el.scrollWidth - el.clientWidth });
+  }
+  // Report the innermost box only: its ancestors overflow because of it.
+  const innermost = overflowing.filter((a) => !overflowing.some((b) => b !== a && a.el.contains(b.el)));
+  checked += 1;
+  for (const { el, clipped, delta } of innermost.slice(0, 10)) {
+    findings.push({
+      check: clipped ? 'clipped' : 'content-overflow',
+      what: clipped
+        ? 'content is cut off (no ellipsis + title)'
+        : 'content is wider than its box and spills out',
+      deltaPx: round(delta),
+      row: selector(el),
+      fields: [text(el)],
+    });
+    flag(el);
   }
 
   // Outline offenders so the next screenshot shows them.

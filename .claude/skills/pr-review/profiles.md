@@ -76,7 +76,7 @@ If the two disagree (e.g. a `[Frontend]` "component" ticket whose PR also rewrit
 ### `fe-component`
 - **Must check:** props exactly as the ticket specifies; **controlled** when a parent owns the state; callbacks pass IDs; emitted data complete; **fitness for the downstream ticket** that will use it (read it and its PR); design fidelity against the ticket screenshot or `design-system`; tokens only (no hex); Shadcn defaults that fight a flat design (`Card` ring); alignment rules (items-start for field rows, icon centering); `title` on truncated text (Frontend → UI & design system, Cross-ticket contracts).
 - **Reviewers:** `qa` (with the `design-system` clone).
-- **Browser:** only if a route already renders the component. Otherwise skip it and say why: the component is judged by its contract and code.
+- **Browser:** always. On its route if one already renders it, otherwise in a **component harness** (fixed props, every state at 1440/768/375 px): layout, overflow, clipping and responsiveness, not flows. Flows stay judged by the contract and code.
 - **Blocker when:** the downstream ticket can't be implemented as written without changing this component.
 
 ### `fe-view`

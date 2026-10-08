@@ -12,6 +12,7 @@ Reads the PR and its ticket, writes an **execution plan**, starts the app with l
 This session runs the PR's code, so it runs under the review guard's **browser mode**. It may run the stack and drive the browser on `localhost`, write only to `review-artifacts/`, and never post to GitHub. Start it with `--settings .claude/browser-test.settings.json --mcp-config .claude/browser-test.mcp.json` (see `.claude/hooks/README.md`).
 
 - Run one plain command per `Bash` call. Pipes, `;`, `&&` and redirects are denied.
+- Search code with plain `grep -rn -e <a> -e <b> <path>`, `find <path> -name "<glob>"` or `git -C <clone> grep -n -e <a> -- <dir>` (no `|` alternations, no `..`); there are no `Grep`/`Glob` tools.
 - `--sha <commit>`: test that commit instead of the PR head (backtesting).
 - `<tools>` below means this repo's root, which is the project directory.
 
@@ -19,10 +20,11 @@ Work through the steps in order. Each ends on its **done when**.
 
 ## 1. Confirm browser mode
 
-1. `Write` `<tools>/review-artifacts/_guard/check.md` with any content. It must **succeed**.
-2. `Write` `/tmp/grade-m8-review-canary.txt`. It must be **denied** by the review guard.
+1. `ToolSearch` for `browser_navigate`. The Playwright MCP tools must be **available**. If they aren't, **stop** and report "Playwright MCP not loaded — start with REVIEW_MODE=browser claude (see .claude/hooks/README.md)". Don't run the other checks and never start the stack.
+2. `Write` `<tools>/review-artifacts/_guard/check.md` with any content. It must **succeed**.
+3. `Write` `/tmp/grade-m8-review-canary.txt`. It must be **denied** by the review guard.
 
-**Done when** both behave as described. Otherwise **stop** and report "browser-test guard not active — aborted".
+**Done when** all three behave as described. If check 2 or 3 fails, **stop** and report "browser-test guard not active — aborted".
 
 ## 2. Load the PR and scope the run
 
@@ -32,7 +34,7 @@ Work through the steps in order. Each ends on its **done when**.
 - `sha` = `--sha` if given, else `headRefOid`; `sha7` = its first 7 characters. The **run** name is `frontend-pr-<n>-<sha7>`, and its artifacts dir is `<tools>/review-artifacts/<run>/`.
 - **Classify the task** with `../pr-review/profiles.md` (ticket title plus changed files), the same way `pr-review` does. The profiles decide the run:
   - `fe-view` or `integration` → **in scope**.
-  - `fe-component` → in scope **only if** a route already renders the component (search `src/pages/` and `src/routes/` for it). Otherwise write a one-line `report.md` ("componente sin ruta: se evalúa por contrato y código, sin pruebas en navegador") and stop.
+  - `fe-component` → **in scope**. If a route already renders the component (search `src/pages/` and `src/routes/` for it), test it there like a view. Otherwise run in **harness mode**: the component is mounted on a throwaway page in the clone with fixed props, and the run checks its layout, overflow and responsiveness, not flows. Harness mode is UI only: no backend, no emulators, no login.
   - `hotfix` on the frontend → in scope, but plan only the fixed flow and its neighbours.
   - `training`, or only backend/types/infra profiles → write a one-line `report.md` ("sin cambios de UI: no se ejecutaron pruebas en navegador") and stop.
 - **Integrated** (end to end with the Functions emulator, step 4) when the profiles include `integration`, and also for `fe-view` when its screens load data from the API. An `integration` run **must** be end to end: if the backend can't start, the whole run is `bloqueado`, not a UI-only run.
@@ -40,7 +42,7 @@ Work through the steps in order. Each ends on its **done when**.
 
 Read the ticket (`closingIssuesReferences`, or the number at the start of the branch name) with `gh issue view <issue> --repo grade-m8/frontend --comments`, and the diff with `gh pr diff <n> --repo grade-m8/frontend`.
 
-**Done when** you know the run name, the profiles, whether the PR is in scope and integrated, the backend branch, and the ticket's acceptance criteria as a list.
+**Done when** you know the run name, the profiles, whether the PR is in scope and integrated (or in harness mode), the backend branch, and the ticket's acceptance criteria as a list.
 
 ## 3. Write the execution plan
 
@@ -61,9 +63,22 @@ Cover, in this order:
 
 **Users** (created by `seed.ts`, all with password `Password123!`): Professor `prof.turing@gradem8.com` (owns the seeded subjects and exams), Professor `prof.hopper@gradem8.com`, Students `ada.lovelace@gradem8.com`, `linus.torvalds@gradem8.com`, `margaret.hamilton@gradem8.com`, Admin `admin@gradem8.com` (created in step 4).
 
-**Done when** every ticket criterion maps to a scenario or is marked "no testeable en navegador: <why>", and every changed route has a `wrong-role` scenario.
+**Harness mode** plans differently. Read the component, its props type, the ticket, and the downstream ticket that will use it (from `pr-review`'s dependency lookup, or the ticket body), then list the **states** the harness will render. Each state has a kebab-case name in Spanish and fixed props:
+- `base`: realistic data from the ticket or its screenshot.
+- `contenido-largo`: stress text. Long titles, a 400+ character body, a 60-character word with no spaces, large numbers (e.g. `1000 pts`, `Pregunta 120 de 120`).
+- `minimo`: the shortest valid props (empty optional strings, `0`, single item).
+- one state per boolean or variant prop that changes the look (`error`, `deshabilitado`, each `variant` value).
+
+The scenarios are:
+1. `layout` at **1440, 768 and 375 px** wide, one scenario per width. Each covers every state at once, because the harness shows all of them on one page.
+2. Ticket criteria the harness can show: rendered text and labels, a controlled field that updates when typed into, a disabled field that ignores input, the visible error message, keyboard focus order. Each gets a scenario, with `trap:`/`ticket:` sources as above.
+3. Criteria that need a real screen (navigation, data loading, roles) are marked "no testeable en navegador: componente sin ruta".
+
+**Done when** every ticket criterion maps to a scenario or is marked "no testeable en navegador: <why>", and every changed route has a `wrong-role` scenario (in harness mode: the state list is in `plan.md` and the three `layout` scenarios exist).
 
 ## 4. Start the stack
+
+**Ports first.** Before cloning or starting anything, check that every port of the review stack is free: `curl -s http://127.0.0.1:<port>/` for each of **4400, 4500, 5101, 5188, 8080, 9099**. Each must fail with *connection refused* (curl exit code 7). If any answers, another process owns it: stop here, write the report with every scenario `bloqueado`, name the port and what answered (for a web page, its `<title>`), and go to step 7. The Vite dev server uses **5188**, not Vite's default 5173, because other local projects use 5173.
 
 All clones go under `/tmp/grade-m8-review-ctx/` (`mkdir -p /tmp/grade-m8-review-ctx` first). If a clone dir already exists from an earlier run, reuse it: skip the clone and check out the right commit. The shell returns to the project directory after every call, so each command names its clone explicitly (`--prefix`, `--config`, `-C`). Never rely on `cd`.
 
@@ -75,13 +90,26 @@ All clones go under `/tmp/grade-m8-review-ctx/` (`mkdir -p /tmp/grade-m8-review-
 5. **Java**: run `java -version`. If it's older than 21, run `/usr/libexec/java_home -v 21+` (macOS) and prefix the emulator command with `PATH=<that path>/bin:$PATH`.
 6. **Emulators**, **in the background**: `npx --yes firebase-tools emulators:start --config <backend>/firebase.review.json --only auth,firestore,functions --project demo-grade-m8` (for runs that aren't integrated, `--only auth,firestore`). Background output may be buffered (a command wrapper can hold it until exit), so check readiness by polling instead: `curl -s http://127.0.0.1:4400/emulators` must list `auth`, `firestore` and, for integrated runs, `functions`. Then `curl -s http://127.0.0.1:5101/demo-grade-m8/us-central1/exams/owned` should answer with an `unauthenticated` JSON error. Poll a few times. If it's still not ready after about 20 checks, read the background output for the error.
 7. **Seed**: `npm --prefix <backend> run seed`, then `ADMIN_EMAIL=admin@gradem8.com ADMIN_PASSWORD=Password123! npm --prefix <backend> run seed:admin`.
-8. **Frontend**, **in the background**: `VITE_USE_EMULATORS=true VITE_FIREBASE_PROJECT_ID=demo-grade-m8 VITE_FIREBASE_API_KEY=demo-key VITE_FIREBASE_AUTH_DOMAIN=localhost VITE_API_BASE_URL=http://localhost:5101/demo-grade-m8/us-central1 npm --prefix <frontend> run dev -- --port 5173 --strictPort`. Poll `curl -sf http://localhost:5173/` until it succeeds.
+8. **Frontend**, **in the background**: `VITE_USE_EMULATORS=true VITE_FIREBASE_PROJECT_ID=demo-grade-m8 VITE_FIREBASE_API_KEY=demo-key VITE_FIREBASE_AUTH_DOMAIN=localhost VITE_API_BASE_URL=http://localhost:5101/demo-grade-m8/us-central1 npm --prefix <frontend> run dev -- --port 5188 --strictPort`. Poll `curl -sf http://localhost:5188/` until it succeeds.
 
-**Done when** `curl -sf http://localhost:5173/` succeeds, the emulator output says all emulators are ready, and both seed commands finished without errors. If a command is denied, a port is already taken, or the stack fails to start, record the exact command and error in the report, mark every scenario `bloqueado`, and go to step 7. Don't look for another way to run it. **Never stop, kill or restart a process this session didn't start**: other projects on the machine own their ports.
+### 4b. Harness mode instead
+
+Skip the backend, Java, emulators and seed. Check only port **5188**, then:
+1. Clone and install the frontend (steps 4.1 and 4.3, frontend only).
+2. `Read` `<frontend>/src/main.tsx` for the global CSS imports and the providers the app wraps around routes.
+3. `Write` `<frontend>/src/__review__/Harness.tsx`. It imports the same global CSS as `main.tsx` and the component by its real path, and renders every state from `plan.md`:
+   - Each state goes in `<section data-state="<name>">` with an `<h2>` naming it, stacked vertically with a gap, inside `<main>` with the page padding the app's layout uses. The layout audit reads `data-state` to say which state a finding came from.
+   - Controlled props get real state: a small wrapper with `useState` passes the value and the change callback, so typing works.
+   - Only wrap in a provider (`MemoryRouter`, a context) if the component's imports need it. If it needs live data (a service or API hook), give it fixtures through its props. If that's impossible, mark every scenario `bloqueado` with the reason and go to step 7.
+   - Change nothing else in the clone.
+4. `Write` `<frontend>/review-harness.html`: a minimal HTML document (`lang="es"`, charset, `width=device-width` viewport meta, `<div id="root">`) whose module script is `/src/__review__/Harness.tsx`. Vite serves it at `/review-harness.html` next to the app.
+5. Start Vite exactly as in step 4.8 and poll `curl -sf http://localhost:5188/review-harness.html`.
+
+**Done when** the port check passed, `curl -sf http://localhost:5188/` succeeds, the emulator output says all emulators are ready, and both seed commands finished without errors. In harness mode: `curl -sf http://localhost:5188/review-harness.html` succeeds. If a command is denied, a port is already taken, or the stack fails to start, record the exact command and error in the report, mark every scenario `bloqueado`, and go to step 7. Don't look for another way to run it. **Never stop, kill or restart a process this session didn't start**: other projects on the machine own their ports.
 
 ## 5. Run the plan in the browser
 
-Use the Playwright tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_type`, `browser_fill_form`, `browser_wait_for`, `browser_evaluate`, `browser_take_screenshot`, `browser_console_messages`, `browser_network_requests`, `browser_close`). Base URL: `http://localhost:5173`.
+Use the Playwright tools (`browser_navigate`, `browser_snapshot`, `browser_click`, `browser_type`, `browser_fill_form`, `browser_wait_for`, `browser_evaluate`, `browser_take_screenshot`, `browser_console_messages`, `browser_network_requests`, `browser_close`). Base URL: `http://localhost:5188`.
 
 For each scenario:
 - Start clean: `browser_close`, then log in through the landing page as the scenario's user.
@@ -89,7 +117,9 @@ For each scenario:
 - **Injecting an API error** (`api-error`): after logging in, use `browser_evaluate` to wrap `window.fetch` so requests whose URL contains the target path (e.g. `/subjects/owned`) resolve to `new Response(JSON.stringify({ error: 'internal-error', message: 'x' }), { status: 500 })`. Then reach the screen by **clicking** inside the app, not by reloading (a reload restores `fetch`).
 - **On a failure**, or when the console shows an uncaught error: `browser_take_screenshot` with filename `review-artifacts/<run>/<ID>-fail.png`, then collect `browser_console_messages` and the failing `browser_network_requests`.
 - On a pass for a `ticket:` scenario, take `review-artifacts/<run>/<ID>-ok.png` as evidence.
-- **Layout audit** (`layout` scenarios, and at every state a scenario reaches on a changed screen, including the error state after submitting): `Read` `layout-audit.js` (next to this skill) and pass its **whole content, unchanged,** as the `function` of `browser_evaluate`. It measures the page and returns `findings` (`field-row`, `control-size`, `icon-text`, `overflow`, each with `deltaPx`, the row, its `align-items`, and the fields involved). It also outlines the offending elements in red. Any finding makes the scenario a `falla`. Take the screenshot right after the audit (`review-artifacts/<run>/<ID>-layout-<state>-<width>.png`) so the outline is visible, and record each finding with the state and width. Switch width with `browser_resize` (1440×900, then 1024×900).
+- **Layout audit** (`layout` scenarios, and at every state a scenario reaches on a changed screen, including the error state after submitting): `Read` `layout-audit.js` (next to this skill) and pass its **whole content, unchanged,** as the `function` of `browser_evaluate`. It measures the page and returns `findings` (`field-row`, `control-size`, `icon-text`, `overflow`, `content-overflow`, `clipped`, each with `deltaPx`, the element or row, its `align-items`, the fields or text involved, and in harness mode the `state`). It also outlines the offending elements in red. Any finding makes the scenario a `falla`. Take the screenshot right after the audit (`review-artifacts/<run>/<ID>-layout-<state>-<width>.png`) so the outline is visible, and record each finding with the state and width. Switch width with `browser_resize` (1440×900, then 1024×900).
+
+**Harness mode**: no login. `browser_navigate` to `http://localhost:5188/review-harness.html`. For each `layout` scenario, `browser_resize` to its width (×900), run the layout audit, and **always** take a full-page screenshot `review-artifacts/<run>/<ID>-layout-harness-<width>.png`, findings or not: it's the visual evidence the reviewer looks at. Then look at the screenshot yourself (`Read` it). Report what the audit can't measure but is plainly visible (overlapping elements, text running into a badge, an awkward wrap at 375px) as a `falla` with impact `minor`, unless it hides content or controls (`major`). For the other scenarios, interact inside the matching `[data-state]` section.
 
 Screenshot filenames are resolved from the project directory, so always start them with `review-artifacts/<run>/`. Anything else ends up outside the gitignored folder.
 
@@ -97,7 +127,7 @@ Screenshot filenames are resolved from the project directory, so always start th
 
 ## 6. Save a re-runnable script
 
-Write `<tools>/review-artifacts/<run>/scenarios.spec.ts`: a Playwright Test file with one `test()` per executed scenario, repeating the steps you actually took. Use `getByRole` / `getByLabel` / `getByText` locators and the same users. Put a header comment explaining how to start the stack (the step 4 commands) and run it (`npx playwright test <file>`). It's for a person to reproduce failures; nothing runs it automatically.
+Write `<tools>/review-artifacts/<run>/scenarios.spec.ts`: a Playwright Test file with one `test()` per executed scenario, repeating the steps you actually took. Use `getByRole` / `getByLabel` / `getByText` locators and the same users. Put a header comment explaining how to start the stack (the step 4 commands) and run it (`npx playwright test <file>`). It's for a person to reproduce failures; nothing runs it automatically. In harness mode, also `Write` copies of the two harness files to `<tools>/review-artifacts/<run>/Harness.tsx` and `review-harness.html`, and say in the header where they go in a frontend checkout.
 
 **Done when** each executed scenario appears in the file.
 
@@ -108,7 +138,7 @@ Write `<tools>/review-artifacts/<run>/report.md`:
 ```markdown
 # Pruebas en navegador — frontend#<n> @ <sha7>
 
-- Backend: <branch or backend PR> · Modo: <integrado | solo UI> · Tipo de tarea: <profiles> · Fecha: <date>
+- Backend: <branch or backend PR | — (harness)> · Modo: <integrado | solo UI | harness de componente> · Tipo de tarea: <profiles> · Fecha: <date>
 - Resultado: <ok> ok · <falla> fallas · <bloqueado> bloqueados
 
 | ID | Escenario | Rol | Resultado | Evidencia |
@@ -125,6 +155,8 @@ Write `<tools>/review-artifacts/<run>/report.md`:
 - **Captura:** `review-artifacts/<run>/<ID>-fail.png`
 ```
 
+In harness mode, also list the states and their props under `## Estados del harness`, so the reviewer knows what each screenshot shows.
+
 Then stop the frontend and emulator background tasks **this session started** (and nothing else), and call `browser_close`.
 
-**Done when** `report.md` exists, both background tasks are stopped, and you've reported one line: `frontend#<n> @ <sha7>: <ok>/<falla>/<bloqueado> — review-artifacts/<run>/`.
+**Done when** `report.md` exists, the background tasks this session started are stopped, and you've reported one line: `frontend#<n> @ <sha7>: <ok>/<falla>/<bloqueado> — review-artifacts/<run>/`.

@@ -15,7 +15,7 @@ Turns a list of review findings into the PR comment a developer reads. Two modes
 
 ## Tone and Style
 - Spanish, formal but approachable, addressed to the PR author: start with `Hola @<author>!`.
-- Open with one or two sentences of **specific** praise for what's genuinely good in this PR (a component, a pattern, an edge case handled), then move to the points.
+- When there are blockers, open with one or two sentences of **specific** praise for what's genuinely good in this PR (a component, a pattern, an edge case handled), then move to the points. An approved PR gets a summary instead (see below).
 - Close with: "Cualquier cosa avisame y lo revisamos/vemos."
 
 ## Feedback Guidelines
@@ -27,16 +27,36 @@ Turns a list of review findings into the PR comment a developer reads. Two modes
 
 ## Comment structure
 
+The verdict decides the shape. Include only what the dev must act on; anything extra leaves them unsure whether it's required.
+
+### `Aprobado`: summary only
+
+No points, suggestions or recommendations of any kind, and no praise section.
+
+```markdown
+Hola @<author>!
+
+<2–4 sentences: what the PR fixes or implements and how it does it, naming the main files. On a re-review, also what was resolved since the last review.>
+
+Queda lista para mergear desde mi lado.
+
+Cualquier cosa avisame y lo revisamos/vemos.
+```
+
+### `Requiere cambios` / `Rechazado`: blockers only
+
+List only the blockers (for `Rechazado`, the reasons it doesn't match the ticket or its purpose). No "Otros puntos importantes", no "Sugerencias", no "no bloqueantes".
+
 ```markdown
 Hola @<author>!
 
 <1–2 sentences of specific praise>
 
-<one line: whether it's ready to merge or what's left>
+<one line: how many blockers remain before merging>
 
 ---
 
-### 1. <Short title>
+### 1. <Short title of the blocker>
 
 * **El escenario:** <what the code does now, with `file:line`>
 * **El riesgo:** <what breaks, for whom, when>
@@ -48,20 +68,18 @@ Hola @<author>!
 
 ---
 
-<Optional "Otros puntos importantes" list: one line each — `file:line` — problem — hint>
-
 <Optional "🧪 Pruebas en navegador" section, when a browser-test report exists: the results table (ID, escenario, rol, resultado), then one line per failure pointing to its full point above and to its screenshot (`review-artifacts/<run>/<ID>-fail.png`, stored on the review runner, since GitHub comments can't take uploads from the CLI)>
-
-<Optional "Sugerencias (no bloqueantes)" list: one line each>
 
 Cualquier cosa avisame y lo revisamos/vemos.
 ```
 
-Order points most severe first (security, runtime bugs, contract mismatches, ticket gaps, then conventions and hygiene). If there's nothing to fix, say so in two or three lines: praise plus "queda lista para mergear desde mi lado".
+Order blockers most severe first (security, runtime bugs, contract mismatches, ticket gaps, then conventions and hygiene).
+
+In manual mode with no verdict given, use the `Aprobado` shape when there are no blockers, and the blockers-only shape otherwise.
 
 ## Automated mode additions
 
-When called by `pr-review`, wrap the structure above with a fixed header and footer:
+When called by `pr-review`, wrap the structure for the verdict with a fixed header and footer:
 
 ```markdown
 > 🤖 **Revisión automática** — generada por IA a partir de `CONVENTIONS.md` y los agentes de QA de `grade-m8/tools`. Es orientativa: la aprobación final la hace una persona del equipo.

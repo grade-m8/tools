@@ -24,8 +24,12 @@ const COMMENT_REPOS = ['backend', 'frontend'];
 const READ_REPOS = ['backend', 'frontend', 'tools', 'design-system'];
 
 // Tools that only read, or only orchestrate other (also guarded) calls.
+// SubagentHandback only returns a subagent's report to the session that launched
+// it (no files, no commands, nothing leaves the machine). SendMessage stays out:
+// it can reach other local sessions, which this guard doesn't cover.
 const ALLOWED_TOOLS = new Set([
   'Read', 'Grep', 'Glob', 'LS', 'Skill', 'Agent', 'Task', 'ToolSearch', 'TodoWrite',
+  'SubagentHandback',
 ]);
 // Browser mode also manages the background servers it starts.
 const BROWSER_EXTRA_TOOLS = new Set(['TaskStop', 'KillShell', 'BashOutput']);
@@ -37,7 +41,11 @@ const repoAlt = (repos) => `${OWNER}/(?:${repos.join('|')})`;
 const REPO_FLAG = `--repo ${repoAlt(READ_REPOS)}`;
 const NUM = '\\d+';
 // Branch names carry accents (e.g. `77-integración-...`), so letters are Unicode.
-const SAFE_ARG = '[\\p{L}\\p{N}._,:/=@-]+';
+// `%` for git's --format placeholders (e.g. `--format=%h%x20%cd`).
+const SAFE_ARG = '[\\p{L}\\p{N}._,:/=@%-]+';
+// A search pattern or glob: quoted (so the shell never expands it) or a plain safe arg.
+// SHELL_META already rejects `$(`, `${`, backslashes, pipes and backticks anywhere in the command.
+const QUOTED_ARG = `(?:"[^"$]*"|'[^']*'|${SAFE_ARG})`;
 const NAME = '[\\p{L}\\p{N}._-]+';
 const CTX_PATH = `${CONTEXT_DIR}${NAME}`;
 const CTX_OR_FUNCTIONS = `${CTX_PATH}(?:/functions)?`;
@@ -59,11 +67,28 @@ const READ_RULES = [
   rule(`^git clone(?: --depth ${NUM})?(?: --branch ${SAFE_ARG})? https://github\\.com/${repoAlt(READ_REPOS)}(?:\\.git)? ${CTX_PATH}$`),
   // Move a context clone to a given commit — only inside the context dir.
   rule(`^git -C ${CTX_PATH} (?:checkout|switch) (?:--detach )?${SAFE_ARG}$`),
-  // Read-only git inspection, optionally with -C <dir>.
-  rule(`^git(?: -C ${SAFE_ARG})? (?:fetch|diff|log|show|status|rev-parse|merge-base|ls-files|branch --list)(?: ${SAFE_ARG})*$`),
+  // Read-only git inspection, optionally with -C <dir>. `git grep -O` (runs a pager) is rejected in checkBash.
+  rule(`^git(?: -C ${SAFE_ARG})? (?:fetch|diff|log|show|status|rev-parse|merge-base|ls-files|ls-tree|grep|branch --list)(?: ${QUOTED_ARG})*$`),
   rule(`^ls(?: -[a-zA-Z]+)?(?: [\\p{L}\\p{N}._/-]+)*$`),
   rule(`^mkdir -p (?:${SCRATCH_DIR.slice(0, -1)}|${CONTEXT_DIR.slice(0, -1)})$`),
 ];
+
+// Searching code (this build has no Grep/Glob tools, so search goes through Bash): grep and
+// find, read-only flags only, over the review clones, the project dir, or paths relative to it
+// (the shell's cwd). `..` segments are rejected in checkBash.
+function searchRules(projectDir) {
+  const seg = '[\\p{L}\\p{N}._@+-]+';
+  const roots = [CONTEXT_DIR.slice(0, -1)];
+  if (projectDir) roots.push(projectDir.replace(/\/+$/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // A relative path can't start with `-`, or an option like find's `-fprint` would pass as one.
+  const path = `(?:(?:${roots.join('|')})(?:/${seg})*/?|[\\p{L}\\p{N}._@+]${seg.slice(0, -1)}*(?:/${seg})*/?)`;
+  const grepOpt = `(?:-[a-zA-Z]+|-[ABCm] ?${NUM}|--(?:include|exclude|exclude-dir)=${QUOTED_ARG}|-e ${QUOTED_ARG}|--color=never)`;
+  const findExpr = `(?:-(?:max|min)depth ${NUM}|-type [fdl]|-i?(?:name|path) ${QUOTED_ARG}|-not|-print)`;
+  return [
+    rule(`^grep(?: ${grepOpt})*(?: ${QUOTED_ARG})?(?: ${path})+$`),
+    rule(`^find(?: ${path})+(?: ${findExpr})*$`),
+  ];
+}
 
 // Posting: review mode only. Always a new comment — no --edit-last, which edits
 // the authenticated user's last comment (possibly a human's).
@@ -108,7 +133,7 @@ function deny(mode, reason) {
   };
 }
 
-function checkBash(mode, command) {
+function checkBash(mode, command, projectDir) {
   const cmd = String(command ?? '').trim();
   if (!cmd) return deny(mode, 'empty command.');
   if (SHELL_META.test(cmd)) {
@@ -116,11 +141,14 @@ function checkBash(mode, command) {
   }
   // git/gh/curl options that write to disk even on read-only subcommands.
   if (/(?:^| )(?:--output|-o)(?:=| |$)/.test(cmd)) return deny(mode, 'output-to-file options are not allowed.');
-  const rules = mode === 'browser' ? [...READ_RULES, ...RUN_RULES] : [...READ_RULES, ...POST_RULES];
+  // `git grep -O<cmd>` / `--open-files-in-pager` runs a program on the matches.
+  if (/(?:^| )(?:-O|--open-files-in-pager)/.test(cmd)) return deny(mode, 'pager/exec options are not allowed.');
+  if (/(?:^|[\s/='"])\.\.(?:[/\s'"]|$)/.test(cmd)) return deny(mode, '`..` path segments are not allowed.');
+  const rules = [...READ_RULES, ...searchRules(projectDir), ...(mode === 'browser' ? RUN_RULES : POST_RULES)];
   if (rules.some((r) => r.test(cmd))) return null;
   const allowed = mode === 'browser'
-    ? 'reads, clones into the context dir, npm --prefix <clone> ci/build/seed/dev, emulators with --config <clone>/firebase.json on a demo project, curl to localhost'
-    : 'gh pr view/diff/checks/list, gh issue view, gh pr comment --body-file, gh repo clone into the context dir, read-only git, ls';
+    ? 'reads, grep/find over the clones and the project, clones into the context dir, npm --prefix <clone> ci/build/seed/dev, emulators with --config <clone>/firebase.json on a demo project, curl to localhost'
+    : 'gh pr view/diff/checks/list, gh issue view, gh pr comment --body-file, gh repo clone into the context dir, read-only git (incl. grep, ls-tree), grep/find over the clones and the project, ls';
   return deny(mode, `\`${cmd.slice(0, 80)}\` is not on the allowlist (${allowed}).`);
 }
 
@@ -133,12 +161,15 @@ function checkWrite(mode, filePath, projectDir) {
   // The review stack's own emulator ports (e.g. Functions on 5101, so it never
   // collides with other local services) live in a copy of firebase.json in the clone.
   if (rule(`^${CTX_PATH}/firebase\\.review\\.json$`).test(path)) return null;
+  // Harness for a component no route renders yet (pr-browser-test step 4b): a page
+  // Vite serves from the frontend clone, rendering the component in fixed states.
+  if (rule(`^${CTX_PATH}/(?:review-harness\\.html|src/__review__/${NAME}\\.tsx)$`).test(path)) return null;
   if (projectDir) {
     const artifacts = `${projectDir.replace(/\/+$/, '')}/${ARTIFACTS_DIRNAME}/`;
     const escaped = artifacts.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    if (rule(`^${escaped}${NAME}/${NAME}\\.(?:md|ts|json)$`).test(path) && !path.includes('/../')) return null;
+    if (rule(`^${escaped}${NAME}/${NAME}\\.(?:md|ts|tsx|html|json)$`).test(path) && !path.includes('/../')) return null;
   }
-  return deny(mode, `writes are only allowed to <tools>/${ARTIFACTS_DIRNAME}/<run>/<file>.{md,ts,json} and <clone>/firebase.review.json.`);
+  return deny(mode, `writes are only allowed to <tools>/${ARTIFACTS_DIRNAME}/<run>/<file>.{md,ts,tsx,html,json}, <clone>/firebase.review.json and the component harness (<clone>/review-harness.html, <clone>/src/__review__/<name>.tsx).`);
 }
 
 function checkPlaywright(mode, toolName, toolInput) {
@@ -168,7 +199,7 @@ export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_P
 
   if (ALLOWED_TOOLS.has(toolName)) return null;
   if (mode === 'browser' && BROWSER_EXTRA_TOOLS.has(toolName)) return null;
-  if (toolName === 'Bash') return checkBash(mode, toolInput.command);
+  if (toolName === 'Bash') return checkBash(mode, toolInput.command, projectDir);
   if (toolName === 'Write') return checkWrite(mode, toolInput.file_path, projectDir);
   if (toolName.startsWith('mcp__')) return checkMcp(mode, toolName, toolInput);
   return deny(mode, `tool \`${toolName}\` is not available in this mode.`);

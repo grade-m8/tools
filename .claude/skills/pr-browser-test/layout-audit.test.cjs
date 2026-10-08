@@ -25,6 +25,14 @@ const fixtures = {
   'different control heights':    { html: page(`<div style="display:flex;align-items:flex-start;gap:24px">${field('A','<input style="height:40px">')}${field('B','<input style="height:52px">')}</div>`), expect: ['control-size'] },
   'stacked (mobile) is not a row':{ html: page(`<div style="display:flex;flex-direction:column">${field('A', input, 'err')}${field('B', select)}</div>`), expect: [] },
   'horizontal overflow':          { html: page('<div style="width:3000px;height:10px"></div>'), expect: ['overflow'] },
+  'long word spills out of card': { html: page('<div style="width:200px;border:1px solid"><p style="margin:0">Pregunta_con_una_palabra_larguisima_que_no_se_corta_nunca</p></div>'), expect: ['content-overflow'] },
+  'long word wraps (break-words)':{ html: page('<div style="width:200px"><p style="margin:0;overflow-wrap:anywhere">Pregunta_con_una_palabra_larguisima_que_no_se_corta_nunca</p></div>'), expect: [] },
+  'text cut off, no ellipsis':    { html: page('<div style="width:200px;overflow:hidden;white-space:nowrap">Una consigna muy larga que no entra en la tarjeta</div>'), expect: ['clipped'] },
+  'ellipsis without title':       { html: page('<div style="width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">Una consigna muy larga que no entra en la tarjeta</div>'), expect: ['clipped'] },
+  'ellipsis with title':          { html: page('<div title="Una consigna muy larga" style="width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">Una consigna muy larga que no entra en la tarjeta</div>'), expect: [] },
+  'sr-only label is not clipped': { html: page('<label style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">Respuesta a la pregunta 1</label><textarea></textarea>'), expect: [] },
+  'scroll container is fine':     { html: page('<div style="width:200px;overflow-x:auto"><div style="width:600px;height:10px"></div></div>'), expect: [] },
+  'finding names harness state':  { html: page('<section data-state="contenido-largo"><div style="width:200px"><p style="margin:0">Pregunta_con_una_palabra_larguisima_que_no_se_corta_nunca</p></div></section>'), expect: ['content-overflow'], state: 'contenido-largo' },
 };
 
 (async () => {
@@ -32,11 +40,13 @@ const fixtures = {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   let fail = 0;
-  for (const [name, { html, expect }] of Object.entries(fixtures)) {
+  for (const [name, { html, expect, state }] of Object.entries(fixtures)) {
     await page.setContent(html);
     const res = await page.evaluate(`(${audit})()`);
     const got = [...new Set(res.findings.map((f) => f.check))].sort();
-    const ok = JSON.stringify(got) === JSON.stringify([...expect].sort());
+    const ok =
+      JSON.stringify(got) === JSON.stringify([...expect].sort()) &&
+      (state === undefined || res.findings.every((f) => f.state === state));
     if (!ok) fail += 1;
     console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}: got [${got}]`);
   }
