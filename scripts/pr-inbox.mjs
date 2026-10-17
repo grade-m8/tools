@@ -30,7 +30,7 @@ const LABEL = 'com.grade-m8.pr-inbox';
 const PLIST = join(homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`);
 const MINUTE = 60_000;
 // Every automated run (browser test, review and the review's subagents) uses this model and effort.
-const REVIEW_MODEL = 'claude-sonnet-5-5';
+const REVIEW_MODEL = 'gemini-3.8-flash-medium';
 const REVIEW_EFFORT = 'medium';
 
 const readJson = (file, fallback) => (existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : fallback);
@@ -159,19 +159,60 @@ function openPrs(repo) {
 }
 
 function runClaude(prompt, flags, logFile, timeoutMin) {
+  // Translate settings flags to REVIEW_MODE environment variable if provided
+  let reviewMode = process.env.REVIEW_MODE;
+  if (flags.some((f) => f.includes('browser-test'))) {
+    reviewMode = 'browser';
+  } else if (flags.some((f) => f.includes('review-mode'))) {
+    reviewMode = '1';
+  }
+
+  // Filter out Claude-specific flags that agy doesn't accept
+  const claudeFlags = new Set([
+    '--settings', '--mcp-config', '--disallowedTools', '--permission-mode',
+    '--strict-mcp-config', '--setting-sources',
+  ]);
+  const extraFlags = [];
+  for (let i = 0; i < flags.length; i++) {
+    const flag = flags[i];
+    if (claudeFlags.has(flag)) {
+      if (i + 1 < flags.length && !flags[i + 1].startsWith('-')) {
+        i++;
+      }
+      continue;
+    }
+    extraFlags.push(flag);
+  }
+
+  const agyArgs = [
+    '-p', prompt,
+    '--model', REVIEW_MODEL,
+    '--effort', REVIEW_EFFORT,
+    '--dangerously-skip-permissions',
+    ...extraFlags,
+  ];
+
   // Output goes straight to the log, so `tail -f` shows progress while the run is going.
-  writeFileSync(logFile, `$ claude -p "${prompt}" ${flags.join(' ')}\n\n`);
+  writeFileSync(logFile, `$ agy ${agyArgs.join(' ')}\n\n`);
   const fd = openSync(logFile, 'a');
-  // No user settings: their hooks (e.g. RTK rewriting `find`/`grep` into filtered output) would change
-  // what the session sees. The review guard lives in the project settings, so it still loads.
-  const res = spawnSync('claude', ['-p', prompt, '--model', REVIEW_MODEL, '--effort', REVIEW_EFFORT,
-    '--permission-mode', 'bypassPermissions', '--strict-mcp-config', '--setting-sources', 'project,local', ...flags], {
-    cwd: ROOT, stdio: ['ignore', fd, fd], timeout: timeoutMin * MINUTE,
-    env: { ...process.env, CLAUDE_CODE_SUBAGENT_MODEL: REVIEW_MODEL },
+
+  const agyBinDir = join(homedir(), '.local', 'bin');
+  const envPath = process.env.PATH ? `${agyBinDir}:${process.env.PATH}` : agyBinDir;
+  const env = {
+    ...process.env,
+    PATH: envPath,
+    ...(reviewMode ? { REVIEW_MODE: reviewMode } : {}),
+  };
+
+  const res = spawnSync('agy', agyArgs, {
+    cwd: ROOT,
+    stdio: ['ignore', fd, fd],
+    timeout: timeoutMin * MINUTE,
+    env,
   });
   closeSync(fd);
   const lastLine = readFileSync(logFile, 'utf8').trim().split('\n').pop() ?? '';
-  // Ctrl-C, terminal closed, `kill`…: claude may die on the signal or exit with 128+signal.
+  // Ctrl-C, terminal closed, `kill`…: agy may die on the signal or exit with 128+signal.
   // A timeout sets error instead, so it counts as a failure.
   const interrupted = (Boolean(res.signal) || res.status > 128) && !res.error;
   return { ok: res.status === 0, lastLine, interrupted, error: res.error?.message };
@@ -396,7 +437,7 @@ function uninstall() {
 
 // --- cli --------------------------------------------------------------------
 
-// Ctrl-C / closing the terminal also stops the claude child; ignoring it here lets review() see
+// Ctrl-C / closing the terminal also stops the agy child; ignoring it here lets review() see
 // that and save the item's status instead of dying with it stuck on "running".
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => {});
 

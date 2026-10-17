@@ -8,7 +8,8 @@ set -euo pipefail
 
 here=${0:A:h}
 root=${here:h:h}                                    # tools/
-app="$HOME/Applications/PR Inbox.app"
+app="/Applications/PR Inbox.app"
+[[ -w "/Applications" ]] || app="$HOME/Applications/PR Inbox.app"
 label=com.grade-m8.pr-inbox-bar
 agent="$HOME/Library/LaunchAgents/$label.plist"
 domain="gui/$(id -u)"

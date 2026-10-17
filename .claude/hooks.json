@@ -1,0 +1,16 @@
+{
+  "review-guard": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/review-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

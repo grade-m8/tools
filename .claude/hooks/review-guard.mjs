@@ -193,8 +193,27 @@ function checkMcp(mode, toolName, toolInput) {
 }
 
 export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_PROJECT_DIR) {
-  const toolName = input?.tool_name;
-  const toolInput = input?.tool_input ?? {};
+  let toolName = input?.tool_name;
+  let toolInput = input?.tool_input ?? {};
+
+  if (input?.toolCall) {
+    const rawName = input.toolCall.name;
+    const args = input.toolCall.args || {};
+    if (rawName === 'run_command' || rawName === 'Bash') {
+      toolName = 'Bash';
+      toolInput = { command: args.CommandLine || args.command };
+    } else if (rawName === 'write_to_file' || rawName === 'Write') {
+      toolName = 'Write';
+      toolInput = { file_path: args.TargetFile || args.file_path, content: args.CodeContent || args.content };
+    } else if (rawName === 'replace_file_content') {
+      toolName = 'Write';
+      toolInput = { file_path: args.TargetFile || args.file_path };
+    } else {
+      toolName = rawName;
+      toolInput = args;
+    }
+  }
+
   if (typeof toolName !== 'string') return deny(mode, 'malformed hook input.');
 
   if (ALLOWED_TOOLS.has(toolName)) return null;
@@ -215,12 +234,25 @@ function main() {
   const mode = modeFromEnv(process.env.REVIEW_MODE);
   if (!mode) return;
 
+  let input;
   let result;
   try {
-    result = decide(JSON.parse(readFileSync(0, 'utf8')), mode);
+    input = JSON.parse(readFileSync(0, 'utf8'));
+    result = decide(input, mode);
   } catch {
     result = deny(mode, 'could not parse hook input.');
   }
+
+  if (input?.toolCall) {
+    if (!result) {
+      process.stdout.write(JSON.stringify({ decision: 'allow' }));
+    } else {
+      const reason = result.hookSpecificOutput?.permissionDecisionReason || 'denied by review guard';
+      process.stdout.write(JSON.stringify({ decision: 'deny', reason }));
+    }
+    return;
+  }
+
   if (result) process.stdout.write(JSON.stringify(result));
 }
 

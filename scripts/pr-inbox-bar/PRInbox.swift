@@ -34,7 +34,7 @@ struct RunResult {
     let output: String
 }
 
-/// Runs `node scripts/pr-inbox.mjs …` with a PATH that finds node, gh and claude
+/// Runs `node scripts/pr-inbox.mjs …` with a PATH that finds node, gh and agy
 /// (apps started from Finder or launchd don't get your shell's PATH).
 enum Script {
     static let root: String = Bundle.main.object(forInfoDictionaryKey: "PRInboxRoot") as? String ?? ""
