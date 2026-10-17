@@ -159,11 +159,31 @@ function openPrs(repo) {
 }
 
 function runClaude(prompt, flags, logFile, timeoutMin) {
-  // Translate settings flags to REVIEW_MODE environment variable if provided
+  // Parse settings flags and disallowed tools
   let reviewMode = process.env.REVIEW_MODE;
-  if (flags.some((f) => f.includes('browser-test'))) {
+  const disallowed = [];
+
+  for (let i = 0; i < flags.length; i++) {
+    const flag = flags[i];
+    if (flag === '--settings' && i + 1 < flags.length) {
+      const settingsPath = resolve(ROOT, flags[i + 1]);
+      if (existsSync(settingsPath)) {
+        try {
+          const settings = JSON.parse(readFileSync(settingsPath, 'utf8'));
+          if (settings.env?.REVIEW_MODE) reviewMode = settings.env.REVIEW_MODE;
+          if (Array.isArray(settings.permissions?.deny)) {
+            disallowed.push(...settings.permissions.deny);
+          }
+        } catch {}
+      }
+    } else if (flag === '--disallowedTools' && i + 1 < flags.length) {
+      disallowed.push(flags[i + 1]);
+    }
+  }
+
+  if (flags.some((f) => f.includes('browser-test')) && !reviewMode) {
     reviewMode = 'browser';
-  } else if (flags.some((f) => f.includes('review-mode'))) {
+  } else if (flags.some((f) => f.includes('review-mode')) && !reviewMode) {
     reviewMode = '1';
   }
 
@@ -202,6 +222,7 @@ function runClaude(prompt, flags, logFile, timeoutMin) {
     ...process.env,
     PATH: envPath,
     ...(reviewMode ? { REVIEW_MODE: reviewMode } : {}),
+    ...(disallowed.length > 0 ? { DISALLOWED_TOOLS: JSON.stringify(disallowed) } : {}),
   };
 
   const res = spawnSync('agy', agyArgs, {

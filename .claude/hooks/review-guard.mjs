@@ -192,7 +192,38 @@ function checkMcp(mode, toolName, toolInput) {
   return deny(mode, `connector operation \`${op}\` is not on the allowlist.`);
 }
 
-export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_PROJECT_DIR) {
+function parseDisallowed(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return String(raw).split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function isDisallowed(toolName, cmdOrPath, disallowedList) {
+  if (!disallowedList || disallowedList.length === 0) return null;
+  for (const pattern of disallowedList) {
+    const m = pattern.match(/^(?:Bash|run_command)\((.*)\)$/);
+    if (m) {
+      if (toolName === 'Bash') {
+        const cmdPattern = m[1].trim();
+        const regexStr = '^' + cmdPattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$';
+        if (new RegExp(regexStr).test(cmdOrPath)) {
+          return pattern;
+        }
+      }
+    } else {
+      if (toolName === pattern) return pattern;
+      if (pattern === 'Edit' && toolName === 'Edit') return pattern;
+      if (pattern === 'WebFetch' && toolName === 'WebFetch') return pattern;
+      if (pattern === 'WebSearch' && toolName === 'WebSearch') return pattern;
+    }
+  }
+  return null;
+}
+
+export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_PROJECT_DIR, disallowedOverride = null) {
   let toolName = input?.tool_name;
   let toolInput = input?.tool_input ?? {};
 
@@ -205,9 +236,40 @@ export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_P
     } else if (rawName === 'write_to_file' || rawName === 'Write') {
       toolName = 'Write';
       toolInput = { file_path: args.TargetFile || args.file_path, content: args.CodeContent || args.content };
-    } else if (rawName === 'replace_file_content') {
-      toolName = 'Write';
+    } else if (rawName === 'replace_file_content' || rawName === 'Edit') {
+      toolName = 'Edit';
       toolInput = { file_path: args.TargetFile || args.file_path };
+    } else if (rawName === 'view_file' || rawName === 'read_resource') {
+      toolName = 'Read';
+      toolInput = { file_path: args.AbsolutePath || args.Uri };
+    } else if (rawName === 'list_resources') {
+      toolName = 'LS';
+      toolInput = args;
+    } else if (rawName === 'read_url_content') {
+      toolName = 'WebFetch';
+      toolInput = { url: args.Url };
+    } else if (rawName === 'search_web') {
+      toolName = 'WebSearch';
+      toolInput = { query: args.query };
+    } else if (rawName === 'invoke_subagent') {
+      toolName = 'Agent';
+      toolInput = args;
+    } else if (rawName === 'manage_task') {
+      toolName = 'TaskStop';
+      toolInput = args;
+    } else if (rawName === 'call_mcp_tool') {
+      const server = args.ServerName;
+      const mcpTool = args.ToolName;
+      const mcpArgs = args.Arguments || {};
+      if (server === 'playwright') {
+        return checkPlaywright(mode, mcpTool, mcpArgs);
+      }
+      return checkMcp(mode, `mcp__${server}__${mcpTool}`, mcpArgs);
+    } else if (rawName.startsWith('mcp_playwright_')) {
+      const op = rawName.slice('mcp_playwright_'.length);
+      return checkPlaywright(mode, op, args);
+    } else if (rawName.startsWith('browser_')) {
+      return checkPlaywright(mode, rawName, args);
     } else {
       toolName = rawName;
       toolInput = args;
@@ -215,6 +277,33 @@ export function decide(input, mode = 'review', projectDir = process.env.CLAUDE_P
   }
 
   if (typeof toolName !== 'string') return deny(mode, 'malformed hook input.');
+
+  // Check explicit disallowed tools (from settings permissions.deny or CLI --disallowedTools)
+  const disallowedList = disallowedOverride ?? parseDisallowed(process.env.DISALLOWED_TOOLS);
+  const matchedRule = isDisallowed(toolName, toolInput.command || toolInput.file_path, disallowedList);
+  if (matchedRule) {
+    return deny(mode, `tool \`${toolName}\` is disallowed by rule \`${matchedRule}\`.`);
+  }
+
+  // Deny Edit/replace_file_content: modifications to existing files are never allowed in review or browser mode
+  if (toolName === 'Edit') {
+    return deny(mode, 'file edits (Edit/replace_file_content) are not allowed.');
+  }
+
+  // Deny WebFetch and WebSearch
+  if (toolName === 'WebFetch' || toolName === 'WebSearch') {
+    return deny(mode, `network access via \`${toolName}\` is not allowed.`);
+  }
+
+  // Deny interactive prompts
+  if (toolName === 'ask_question') {
+    return deny(mode, 'interactive prompts (ask_question) are not allowed in automated mode.');
+  }
+
+  // Deny SendMessage
+  if (toolName === 'SendMessage' || toolName === 'send_message') {
+    return deny(mode, 'SendMessage is not allowed: it can reach other local sessions.');
+  }
 
   if (ALLOWED_TOOLS.has(toolName)) return null;
   if (mode === 'browser' && BROWSER_EXTRA_TOOLS.has(toolName)) return null;

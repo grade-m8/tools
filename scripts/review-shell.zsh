@@ -30,3 +30,18 @@ claude() {
       ;;
   esac
 }
+
+agy() {
+  local root=$_GRADE_M8_TOOLS_ROOT
+  case $REVIEW_MODE in
+    browser)
+      ( cd "$root" && REVIEW_MODE=browser command agy "$@" )
+      ;;
+    1|review)
+      ( cd "$root" && REVIEW_MODE=1 command agy "$@" )
+      ;;
+    *)
+      command agy "$@"
+      ;;
+  esac
+}

@@ -299,9 +299,35 @@ assert.equal(JSON.parse(garbage.stdout).hookSpecificOutput.permissionDecision, '
 const browserE2e = run({ REVIEW_MODE: 'browser' }, bash('gh pr comment 1 --repo grade-m8/frontend --body-file /tmp/grade-m8-review/x.md'));
 assert.equal(JSON.parse(browserE2e.stdout).hookSpecificOutput.permissionDecision, 'deny', 'browser mode must never post');
 
+// Antigravity (Gemini CLI) PreToolUse tests
+const agyTool = (name, args = {}) => ({ toolCall: { name, args } });
+
+const agyCanary = run({ REVIEW_MODE: '1' }, agyTool('write_to_file', { TargetFile: '/tmp/grade-m8-review-canary.txt' }));
+assert.equal(JSON.parse(agyCanary.stdout).decision, 'deny');
+assert.match(JSON.parse(agyCanary.stdout).reason, /Review guard \(review mode\) denied this call/);
+
+const agyAllowed = run({ REVIEW_MODE: '1' }, agyTool('write_to_file', { TargetFile: '/tmp/grade-m8-review/pr-55.md', CodeContent: 'review' }));
+assert.equal(JSON.parse(agyAllowed.stdout).decision, 'allow');
+
+const agyViewFile = run({ REVIEW_MODE: '1' }, agyTool('view_file', { AbsolutePath: '/repo/src/index.ts' }));
+assert.equal(JSON.parse(agyViewFile.stdout).decision, 'allow');
+
+const agyEditDenied = run({ REVIEW_MODE: '1' }, agyTool('replace_file_content', { TargetFile: '/repo/src/index.ts' }));
+assert.equal(JSON.parse(agyEditDenied.stdout).decision, 'deny');
+
+const agyWebFetchDenied = run({ REVIEW_MODE: '1' }, agyTool('read_url_content', { Url: 'https://google.com' }));
+assert.equal(JSON.parse(agyWebFetchDenied.stdout).decision, 'deny');
+
+const agyDisallowedComment = run({
+  REVIEW_MODE: '1',
+  DISALLOWED_TOOLS: JSON.stringify(['Bash(gh pr comment *)']),
+}, agyTool('run_command', { CommandLine: 'gh pr comment 110 --repo grade-m8/frontend --body-file /tmp/grade-m8-review/pr-110.md' }));
+assert.equal(JSON.parse(agyDisallowedComment.stdout).decision, 'deny');
+assert.match(JSON.parse(agyDisallowedComment.stdout).reason, /disallowed by rule/);
+
 const total = allowed.length + denied.length + browserAllowed.length + browserDenied.length + reviewDeniedBrowserOnly.length;
 if (failures) {
   console.error(`${failures}/${total} decision checks failed`);
   process.exit(1);
 }
-console.log(`ok: ${total} decisions (review ${allowed.length}/${denied.length}, browser ${browserAllowed.length}/${browserDenied.length}, review-blocks-browser ${reviewDeniedBrowserOnly.length}), plus 5 end-to-end checks`);
+console.log(`ok: ${total} decisions (review ${allowed.length}/${denied.length}, browser ${browserAllowed.length}/${browserDenied.length}, review-blocks-browser ${reviewDeniedBrowserOnly.length}), plus 11 end-to-end checks`);
