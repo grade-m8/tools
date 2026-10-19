@@ -1,0 +1,28 @@
+{
+  "agentName": "devils-advocate",
+  "version": "1.0.0",
+  "readOnly": true,
+  "thresholds": {
+    "minReportingSeverity": "Low",
+    "minReportingConfidence": 0.3,
+    "minCompositeRiskScore": 0.45
+  },
+  "riskWeights": {
+    "impact": 0.35,
+    "likelihood": 0.25,
+    "exposure": 0.15,
+    "detectabilityInversion": 0.15,
+    "confidence": 0.10
+  },
+  "paths": {
+    "assumptionsRegistry": "./data/assumptions.json",
+    "historicalIncidents": "./data/historical-incidents.json",
+    "evaluationDataset": "./data/evaluation-scenarios.json"
+  },
+  "governance": {
+    "neverModifyCode": true,
+    "neverCommitDirectly": true,
+    "requireHumanConfirmationForReleases": true,
+    "suppressedRisksAuditLog": "./data/suppressed-risks.json"
+  }
+}

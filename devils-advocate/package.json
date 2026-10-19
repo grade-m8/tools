@@ -1,0 +1,24 @@
+{
+  "name": "devils-advocate",
+  "version": "1.0.0",
+  "description": "Adversarial Software Engineering AI Agent for Grade-M8 and modern software architectures",
+  "type": "module",
+  "bin": {
+    "devils-advocate": "./src/cli/cli.ts"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "test:watch": "node --test --watch tests/*.test.ts",
+    "cli": "node src/cli/cli.ts"
+  },
+  "keywords": [
+    "adversarial-engineering",
+    "devils-advocate",
+    "risk-analysis",
+    "premortem",
+    "assumption-radar",
+    "failure-modes"
+  ],
+  "author": "Grade-M8 Mentor Tool System",
+  "license": "MIT"
+}

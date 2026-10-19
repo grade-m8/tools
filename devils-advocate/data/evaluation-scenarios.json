@@ -1,0 +1,69 @@
+[
+  {
+    "scenarioId": "SCENARIO-01",
+    "name": "Concurrent Grading Race Condition & Non-Idempotent Mutation",
+    "targetType": "PullRequest",
+    "description": "A PR introduces an async grading worker that increments totalSubmissions and mutates evaluation scores with updateDoc outside runTransaction.",
+    "inputDiff": "export async function handleGradingTask(submissionId: string) { const doc = await db.collection('submissions').doc(submissionId).get(); const total = doc.data().totalSubmissions; await db.collection('submissions').doc(submissionId).update({ totalSubmissions: total + 1, status: 'graded' }); }",
+    "expectedFindings": [
+      {
+        "classification": "Confirmed Defect",
+        "severity": "Critical",
+        "titleSubstring": "Non-Idempotent Concurrent Grading Mutation"
+      }
+    ]
+  },
+  {
+    "scenarioId": "SCENARIO-02",
+    "name": "Requirement Ambiguity: Exam Submission Cutoff Timezone",
+    "targetType": "Requirement",
+    "description": "User story states 'Students must submit before 23:59 on Sunday' but fails to define timezone or handling of network upload latency.",
+    "inputSpec": "As a professor, I want an automatic cutoff so that students must submit before 23:59 on Sunday. Any attempt after that time should be rejected immediately.",
+    "expectedFindings": [
+      {
+        "classification": "Requirement Ambiguity",
+        "severity": "Medium",
+        "titleSubstring": "Undefined Timezone and Grace Period"
+      }
+    ]
+  },
+  {
+    "scenarioId": "SCENARIO-03",
+    "name": "Destructive Database Schema Migration Without Backward Compatibility",
+    "targetType": "Release",
+    "description": "Release candidate drops support for legacy field studentName in favor of studentProfileId without migration fallback.",
+    "inputScope": "Release v1.2.0: Refactored Firestore database schema. Renamed studentName field to studentProfileId across all collections. Cleaned up legacy fields.",
+    "expectedFindings": [
+      {
+        "classification": "Evidence-Backed Risk",
+        "severity": "Critical",
+        "titleSubstring": "Destructive Database Schema Migration"
+      }
+    ]
+  },
+  {
+    "scenarioId": "SCENARIO-04",
+    "name": "Future Autopsy Premortem on Unmonitored Async Grading Spike",
+    "targetType": "Sprint",
+    "description": "Sprint planning introduces bulk exam evaluations for university finals week with 500 concurrent students.",
+    "inputBacklog": "Sprint 14: Enable batch grading for final exams. When exam period closes, trigger simultaneous AI evaluations for all 500 enrolled students.",
+    "expectedAutopsy": {
+      "severityLevel": "Catastrophic",
+      "expectedBrokenAssumption": "ASM-001"
+    }
+  },
+  {
+    "scenarioId": "SCENARIO-05",
+    "name": "Teacher Override Clobbering / AI Immutability Violation",
+    "targetType": "PullRequest",
+    "description": "PR modifies evaluation repository to perform updateDoc on analysisItems directly.",
+    "inputDiff": "await db.collection('evaluations').doc(evalId).collection('analysisItems').doc(itemId).update({ score: newScore, source: 'teacher' });",
+    "expectedFindings": [
+      {
+        "classification": "Confirmed Defect",
+        "severity": "High",
+        "titleSubstring": "Direct Mutation of Immutable AI Analysis Records"
+      }
+    ]
+  }
+]

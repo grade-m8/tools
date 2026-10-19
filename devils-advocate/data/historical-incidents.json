@@ -1,0 +1,50 @@
+[
+  {
+    "id": "INC-2026-001",
+    "title": "Grading Counter Desynchronization Under Heavy Submission Load",
+    "date": "2026-03-12",
+    "rootCause": "Concurrent requests executed non-transactional increment without Firestore FieldValue.increment() or runTransaction() lock",
+    "affectedLayer": "backend",
+    "keywords": ["counter", "submit", "exam", "race condition", "increment", "totalSubmissions"],
+    "failureSignature": "(increment|totalSubmissions|score)\\s*\\+\\s*1",
+    "mitigationApplied": "Replaced manual read-increment-write with FieldValue.increment(1) inside Firestore runTransaction()",
+    "recurrenceCount": 2,
+    "feedbackScore": 1.0
+  },
+  {
+    "id": "INC-2026-002",
+    "title": "Silent AI Feedback Clashing with Teacher Manual Review",
+    "date": "2026-04-05",
+    "rootCause": "Asynchronous retry worker replaced entire analysisItems array instead of appending new record with source=ai",
+    "affectedLayer": "database",
+    "keywords": ["analysisItems", "teacher", "ai", "grading", "feedback", "overwrite"],
+    "failureSignature": "updateDoc.*analysisItems.*\\b(ai|eval)\\b",
+    "mitigationApplied": "Enforced append-only audit trail: teacher manual edits supersede AI records by creating new item",
+    "recurrenceCount": 1,
+    "feedbackScore": 0.9
+  },
+  {
+    "id": "INC-2026-003",
+    "title": "Broken Role Gate on Evaluation Export Endpoint",
+    "date": "2026-05-18",
+    "rootCause": "Route added to express router without requireRole(\"professor\") middleware, allowing authenticated student to view class exam answers",
+    "affectedLayer": "auth",
+    "keywords": ["export", "evaluation", "route", "middleware", "role", "student", "claims"],
+    "failureSignature": "router\\.(get|post)\\([\\'\"][^\\'\"]*export[^\\'\"]*\\s*,\\s*(?!.*requireRole)",
+    "mitigationApplied": "Added requireRole middleware guard and added automated integration test in test/routes",
+    "recurrenceCount": 1,
+    "feedbackScore": 1.0
+  },
+  {
+    "id": "INC-2026-004",
+    "title": "Cloud Task Queue Thundering Herd on Gemini API",
+    "date": "2026-06-22",
+    "rootCause": "Exam deadline reached for 200 students simultaneously, firing 200 concurrent Cloud Tasks to external LLM without rate limit throttle",
+    "affectedLayer": "queue",
+    "keywords": ["queue", "cloud task", "rate limit", "429", "llm", "gemini", "lmstudio", "quota"],
+    "failureSignature": "cloudTasksClient\\.createTask",
+    "mitigationApplied": "Configured maxConcurrentDispatches: 5 and maxDispatchesPerSecond: 2 on Cloud Tasks queue config",
+    "recurrenceCount": 1,
+    "feedbackScore": 0.85
+  }
+]

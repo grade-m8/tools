@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ASM-001",
+    "description": "Cloud Tasks delivery is at-least-once, requiring all grading handlers to be strictly idempotent.",
+    "source": "wiki/10-grade-m8-architecture.md#grading-pipeline",
+    "ownerRole": "backend-dev",
+    "confidence": 0.95,
+    "affectedComponents": [
+      "functions/src/services/gradingService.ts",
+      "Cloud Tasks queue"
+    ],
+    "validationStatus": "Validated",
+    "impactIfFalse": "Catastrophic",
+    "invalidationEvents": [
+      "Duplicate grading job causes multiple score overwrites",
+      "Non-idempotent counter increments"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z",
+    "updatedAt": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "ASM-002",
+    "description": "AI-generated analysis items are immutable historical records; teacher edits must create new supersede records rather than mutating existing AI rows.",
+    "source": "wiki/10-grade-m8-architecture.md#analysisItems",
+    "ownerRole": "backend-dev",
+    "confidence": 0.9,
+    "affectedComponents": [
+      "functions/src/repositories/evaluationRepository.ts",
+      "analysisItems collection"
+    ],
+    "validationStatus": "Validated",
+    "impactIfFalse": "Major",
+    "invalidationEvents": [
+      "Direct updateDoc on analysisItem with source=ai",
+      "Loss of pedagogical audit trail"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z",
+    "updatedAt": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "ASM-003",
+    "description": "Only repositories may invoke the Firebase Admin Firestore SDK; controllers and services must remain completely decoupled from DB queries.",
+    "source": "wiki/03-databases-and-firestore.md#layering",
+    "ownerRole": "tech-lead",
+    "confidence": 0.95,
+    "affectedComponents": [
+      "backend/controllers",
+      "backend/services",
+      "backend/repositories"
+    ],
+    "validationStatus": "Validated",
+    "impactIfFalse": "Major",
+    "invalidationEvents": [
+      "Service directly calling db.collection()",
+      "Controller querying Firestore"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z",
+    "updatedAt": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "ASM-004",
+    "description": "Frontend role guards in React routes are UI convenience only and must be strictly re-validated on every backend endpoint via custom claims.",
+    "source": "wiki/04-auth-and-roles.md#double-gating",
+    "ownerRole": "tech-lead",
+    "confidence": 0.98,
+    "affectedComponents": [
+      "ProtectedRoutes.tsx",
+      "functions/src/middlewares/authMiddleware.ts"
+    ],
+    "validationStatus": "Validated",
+    "impactIfFalse": "Catastrophic",
+    "invalidationEvents": [
+      "Backend endpoint missing requireRole middleware",
+      "Unchecked token claims"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z",
+    "updatedAt": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "ASM-005",
+    "description": "Database schema changes in Firestore are strictly additive to support rolling deployments without downtime or broken legacy clients.",
+    "source": "wiki/09-deployment-environments.md#migrations",
+    "ownerRole": "tech-lead",
+    "confidence": 0.85,
+    "affectedComponents": [
+      "firestore.indexes.json",
+      "data models"
+    ],
+    "validationStatus": "Validated",
+    "impactIfFalse": "Major",
+    "invalidationEvents": [
+      "Renaming fields without migration fallback",
+      "Dropping collection without backward compatibility"
+    ],
+    "createdAt": "2026-10-19T00:00:00.000Z",
+    "updatedAt": "2026-10-19T00:00:00.000Z"
+  }
+]
