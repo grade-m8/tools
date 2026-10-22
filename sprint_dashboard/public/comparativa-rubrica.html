@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRADE-M8 · Comparativa Rúbricas & Puntos (Tickets 152, 166, 167)</title>
+  <meta name="description" content="Demostración interactiva comparando el comportamiento viejo vs el comportamiento esperado con los tickets 152, 166 y 167">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0B0F17;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1F2937;
+      --bg-surface-glass: rgba(17, 24, 39, 0.75);
+      --border-subtle: #374151;
+      --border-accent: #0D9488;
+      --text-primary: #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      
+      --teal-primary: #0D9488;
+      --teal-hover: #0F766E;
+      --teal-light: #CCFBF1;
+      --teal-dark: #134E4A;
+      
+      --danger-bg: #FEF2F2;
+      --danger-border: #FECACA;
+      --danger-text: #991B1B;
+      --danger-badge: #EF4444;
+
+      --warning-bg: #FFFBEB;
+      --warning-border: #FDE68A;
+      --warning-text: #92400E;
+
+      --old-badge: #E11D48;
+      --new-badge: #10B981;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: radial-gradient(circle at 50% 0%, #131E2E 0%, var(--bg-main) 70%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 80px;
+    }
+
+    /* Top Navigation */
+    header.header {
+      background: rgba(11, 15, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      background: linear-gradient(135deg, #0D9488 0%, #065F46 100%);
+      color: #fff;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.25rem;
+      padding: 6px 14px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    }
+
+    .brand-title h1 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .badge-tickets {
+      background: rgba(13, 148, 136, 0.2);
+      border: 1px solid var(--teal-primary);
+      color: #2DD4BF;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-hub {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-hub:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #6B7280;
+    }
+
+    /* Sub-nav view selector */
+    .view-selector-bar {
+      max-width: 1400px;
+      margin: 24px auto 0;
+      padding: 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .step-switchers {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .step-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-btn.active {
+      background: var(--teal-primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(13, 148, 136, 0.4);
+    }
+
+    .mode-switchers {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--bg-surface-elevated);
+      color: #fff;
+    }
+
+    /* Hero Banner explaining problem vs solution */
+    .hero-banner {
+      max-width: 1400px;
+      margin: 20px auto 0;
+      padding: 0 32px;
+    }
+
+    .insight-card {
+      background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%);
+      border: 1px solid rgba(13, 148, 136, 0.3);
+      border-radius: 12px;
+      padding: 20px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .insight-col h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .insight-col.problem h3 { color: #FB7185; }
+    .insight-col.solution h3 { color: #34D399; }
+
+    .insight-col p {
+      font-size: 0.84rem;
+      color: #D1D5DB;
+      line-height: 1.45;
+    }
+
+    /* Main Comparison Grid */
+    .comparison-container {
+      max-width: 1400px;
+      margin: 28px auto 0;
+      padding: 0 32px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      transition: all 0.3s ease;
+    }
+
+    .comparison-grid.single-old {
+      grid-template-columns: 1fr;
+    }
+    .comparison-grid.single-old .column-new { display: none; }
+
+    .comparison-grid.single-new {
+      grid-template-columns: 1fr;
+    }
+    .comparison-grid.single-new .column-old { display: none; }
+
+    /* Comparison Column */
+    .column-panel {
+      background: var(--bg-surface);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .column-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .column-old .column-header {
+      background: rgba(225, 29, 72, 0.08);
+      border-bottom-color: rgba(225, 29, 72, 0.25);
+    }
+
+    .column-new .column-header {
+      background: rgba(16, 185, 129, 0.08);
+      border-bottom-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .col-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .col-title h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .tag-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 16px;
+    }
+
+    .tag-old {
+      background: rgba(225, 29, 72, 0.2);
+      color: #FB7185;
+      border: 1px solid rgba(225, 29, 72, 0.4);
+    }
+
+    .tag-new {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .col-caption {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .column-content {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #F8FAFC;
+      color: #0F172A;
+    }
+
+    /* Simulation Control Toolbar */
+    .interactive-bar {
+      max-width: 1400px;
+      margin: 20px auto 0;
+      padding: 16px 32px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .interactive-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .interactive-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .control-item select, .control-item input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: var(--font-sans);
+    }
+
+    .control-item input[type="number"] {
+      width: 75px;
+    }
+
+    .btn-action-small {
+      background: var(--teal-primary);
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-action-small:hover { background: var(--teal-hover); }
+
+    /* MOCK UI STYLES (Light mode inside app frame to match Grade-M8 React UI) */
+    .mock-panel {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #E2E8F0;
+      padding-bottom: 12px;
+    }
+
+    .mock-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-ia {
+      background: rgba(13, 148, 136, 0.15);
+      border: 1px solid #0D9488;
+      color: #0F766E;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Criterion Card in Mock */
+    .criterion-card {
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      background: #F8FAFC;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .criterion-card:hover { border-color: #94A3B8; }
+
+    .crit-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .crit-title-input {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #0F172A;
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 60%;
+    }
+
+    .weight-selector-pill {
+      display: flex;
+      background: #E2E8F0;
+      border-radius: 6px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .weight-btn {
+      border: none;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+      color: #64748B;
+      transition: all 0.2s;
+    }
+
+    .weight-btn.selected-high {
+      background: #0D9488;
+      color: #fff;
+    }
+    .weight-btn.selected-medium {
+      background: #0284C7;
+      color: #fff;
+    }
+    .weight-btn.selected-low {
+      background: #D97706;
+      color: #fff;
+    }
+
+    .crit-guidance {
+      font-size: 0.8rem;
+      color: #64748B;
+    }
+
+    /* NEW TICKET 152 & 120 COMPONENT: CriterionPointsBreakdown (Full) */
+    .criterion-breakdown-full {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .breakdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .breakdown-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+    }
+
+    .breakdown-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .breakdown-row-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+
+    .breakdown-crit-name {
+      font-weight: 600;
+      color: #1E293B;
+    }
+
+    .breakdown-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-percent {
+      font-weight: 700;
+      color: #0F172A;
+      font-size: 0.85rem;
+    }
+
+    .badge-pts-max {
+      background: #CCFBF1;
+      color: #115E59;
+      border: 1px solid #99F6E4;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .meter-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #E2E8F0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .meter-bar-fill {
+      height: 100%;
+      background: #0D9488;
+      border-radius: 9999px;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .breakdown-footnote {
+      font-size: 0.75rem;
+      color: #64748B;
+      margin-top: 2px;
+    }
+
+    .helper-text-ticket-166 {
+      font-size: 0.75rem;
+      color: #64748B;
+      background: #F1F5F9;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 3px solid #0D9488;
+    }
+
+    /* TICKET 167: Question Card in Read & Edit modes */
+    .question-card-mock {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .question-card-mock.is-editing {
+      border: 2px solid #0D9488;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+    }
+
+    .q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .q-badge-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-pill-p {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      color: #0F172A;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .q-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0F172A;
+    }
+
+    .q-points-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    /* COMPACT BADGES IN READ VIEW (Ticket 167) */
+    .compact-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid #E2E8F0;
+    }
+
+    .chip-criterion {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      color: #334155;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip-criterion strong {
+      color: #0D9488;
+    }
+
+    /* Missing info alert for old world */
+    .missing-info-box {
+      background: #FFF1F2;
+      border: 1px dashed #FDA4AF;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: #9F1239;
+      font-size: 0.82rem;
+    }
+
+    .missing-info-box svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .callout-success-box {
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: #166534;
+      font-size: 0.82rem;
+    }
+
+    /* Educational Architecture Cards */
+    .cards-row {
+      max-width: 1400px;
+      margin: 32px auto 0;
+      padding: 0 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .ticket-explain-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ticket-explain-card h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ticket-explain-card p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .code-preview {
+      background: #0F172A;
+      border: 1px solid #334155;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #38BDF8;
+      overflow-x: auto;
+      margin-top: auto;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .comparison-grid { grid-template-columns: 1fr; }
+      .insight-card { grid-template-columns: 1fr; }
+      .cards-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="header">
+    <div class="brand-group">
+      <div class="brand-logo">M8</div>
+      <div class="brand-title">
+        <h1>Rúbricas & Puntos <span class="badge-tickets">Tickets #152 · #166 · #167</span></h1>
+        <p>Demostración interactiva: Mundo Viejo vs Mundo Actualizado (Tomi Bregoli)</p>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <a href="/" class="btn-hub">← Volver al Sprint Hub</a>
+    </div>
+  </header>
+
+  <!-- Step & Mode Switcher Bar -->
+  <div class="view-selector-bar">
+    <div class="step-switchers">
+      <button class="step-btn active" id="btn-step-1" onclick="switchStep(1)">
+        <span>1️⃣ Paso 1: Rúbrica del Examen</span>
+        <span class="badge-tag">Ticket #166</span>
+      </button>
+      <button class="step-btn" id="btn-step-2" onclick="switchStep(2)">
+        <span>2️⃣ Paso 2: Editor de Preguntas</span>
+        <span class="badge-tag">Ticket #167</span>
+      </button>
+    </div>
+
+    <div class="mode-switchers">
+      <button class="mode-btn active" id="btn-mode-split" onclick="switchMode('split')">🌓 Lado a Lado (Split View)</button>
+      <button class="mode-btn" id="btn-mode-new" onclick="switchMode('new')">✨ Solo Mundo Nuevo</button>
+      <button class="mode-btn" id="btn-mode-old" onclick="switchMode('old')">⏳ Solo Mundo Viejo</button>
+    </div>
+  </div>
+
+  <!-- Hero Insight Banner -->
+  <div class="hero-banner">
+    <div class="insight-card">
+      <div class="insight-col problem">
+        <h3>❌ El problema del Mundo Viejo (Antes de estos tickets)</h3>
+        <p>El docente leía <em>"Alto 40%"</em> y <em>"Medio 20%"</em> y creía que la suma debía dar 100%. Con 2 criterios sumaba 60% y se preguntaba a dónde iba el otro 40%. En el editor de preguntas ponía 10 puntos a una pregunta sin tener idea de cuántos puntos como tope podía asignar la IA a cada criterio.</p>
+      </div>
+      <div class="insight-col solution">
+        <h3>✅ La solución del Mundo Nuevo (Tickets 152, 166 y 167)</h3>
+        <p>Los pesos son relativos. El componente <strong>CriterionPointsBreakdown</strong> normaliza las proporciones en tiempo real: muestra barritas dinámicas que siempre suman 100%. En el Paso 1 informa el % de cada criterio; en el Paso 2 calcula exactamente <strong>hasta cuántos puntos</strong> puede dar la IA por pregunta.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Controls Toolbar -->
+  <div class="interactive-bar">
+    <div class="interactive-title">
+      <span>🎛️ <strong>Simulador en Vivo:</strong> Modificá los criterios o el puntaje y mirá cómo recalculan ambos mundos:</span>
+    </div>
+    <div class="interactive-controls">
+      <div class="control-item">
+        <label for="input-q-points"><strong>Puntos de Pregunta:</strong></label>
+        <input type="number" id="input-q-points" value="10" min="1" max="100" oninput="updateSimulation()">
+      </div>
+      <button class="btn-action-small" onclick="addCriterionPreset('low')">+ Agregar Criterio Bajo</button>
+      <button class="btn-action-small" onclick="addCriterionPreset('medium')">+ Agregar Criterio Medio</button>
+      <button class="btn-action-small" onclick="resetCriteria()">↺ Resetear a 2 Criterios</button>
+    </div>
+  </div>
+
+  <!-- Main Comparison Columns -->
+  <div class="comparison-container">
+    <div class="comparison-grid" id="main-comparison-grid">
+      
+      <!-- ================= LEFT: MUNDO VIEJO ================= -->
+      <div class="column-panel column-old">
+        <div class="column-header">
+          <div class="col-title">
+            <span class="tag-status tag-old">Mundo Viejo (Sin los tickets)</span>
+            <h2>Comportamiento Anterior</h2>
+          </div>
+          <span class="col-caption">Sin breakdown ni topes de IA</span>
+        </div>
+
+        <div class="column-content" id="old-world-content">
+          <!-- Dynamically populated based on Step 1 or Step 2 -->
+        </div>
+      </div>
+
+      <!-- ================= RIGHT: MUNDO NUEVO ================= -->
+      <div class="column-panel column-new">
+        <div class="column-header">
+          <div class="col-title">
+            <span class="tag-status tag-new">Mundo Nuevo (Esperado)</span>
+            <h2>Con Tickets 152, 166 y 167</h2>
+          </div>
+          <span class="col-caption">Breakdown reactivo proporcional</span>
+        </div>
+
+        <div class="column-content" id="new-world-content">
+          <!-- Dynamically populated based on Step 1 or Step 2 -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Technical Ticket Cards Breakdown -->
+  <section class="cards-row">
+    <div class="ticket-explain-card">
+      <h4>📦 Ticket #152 (Frontend Component)</h4>
+      <p>Crea la biblioteca matemática pura <code>rubricPoints.ts</code> y el componente presentacional <code>CriterionPointsBreakdown.tsx</code> con variantes <code>full</code> y <code>compact</code>.</p>
+      <div class="code-preview">
+computeCriterionShares(criteria)
+computeCriterionMaxPoints(points, criteria)
+      </div>
+    </div>
+
+    <div class="ticket-explain-card">
+      <h4>🧩 Ticket #166 (Integración Paso 1)</h4>
+      <p>Agrega la prop <code>footer</code> a <code>RubricCriteriaList</code> para mostrar las barras de porcentaje proporcional debajo de las tarjetas en la configuración del examen.</p>
+      <div class="code-preview">
+&lt;CriterionPointsBreakdown
+  criteria={formState.rubricCriteria}
+  variant="full"
+/&gt;
+      </div>
+    </div>
+
+    <div class="ticket-explain-card">
+      <h4>⚡ Ticket #167 (Integración Paso 2)</h4>
+      <p>Pasa los criterios de <code>useExam</code> al editor de preguntas. Muestra chips compactos en vista de lectura y el desglose completo en vivo bajo el input de puntos en edición.</p>
+      <div class="code-preview">
+&lt;CriterionPointsBreakdown
+  criteria={criteria}
+  questionPoints={draft.points}
+  variant="compact | full"
+/&gt;
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    // State of criteria in the simulator
+    let criteriaState = [
+      { id: "c1", title: "Rigor Técnico y Definiciones", weight: "high", weightVal: 40 },
+      { id: "c2", title: "Claridad en la Explicación", weight: "medium", weightVal: 20 }
+    ];
+
+    let currentStep = 1; // 1 = Paso 1 (Rúbricas), 2 = Paso 2 (Preguntas)
+    let isEditingQuestion = false;
+
+    // Weight mapping
+    const WEIGHT_MAP = {
+      high: { label: "Alto", val: 40, class: "selected-high" },
+      medium: { label: "Medio", val: 20, class: "selected-medium" },
+      low: { label: "Bajo", val: 10, class: "selected-low" }
+    };
+
+    function switchStep(step) {
+      currentStep = step;
+      document.getElementById('btn-step-1').classList.toggle('active', step === 1);
+      document.getElementById('btn-step-2').classList.toggle('active', step === 2);
+      render();
+    }
+
+    function switchMode(mode) {
+      const grid = document.getElementById('main-comparison-grid');
+      grid.className = 'comparison-grid';
+      if (mode === 'old') grid.classList.add('single-old');
+      if (mode === 'new') grid.classList.add('single-new');
+
+      document.getElementById('btn-mode-split').classList.toggle('active', mode === 'split');
+      document.getElementById('btn-mode-new').classList.toggle('active', mode === 'new');
+      document.getElementById('btn-mode-old').classList.toggle('active', mode === 'old');
+    }
+
+    function changeWeight(criterionId, newWeight) {
+      const crit = criteriaState.find(c => c.id === criterionId);
+      if (crit) {
+        crit.weight = newWeight;
+        crit.weightVal = WEIGHT_MAP[newWeight].val;
+        render();
+      }
+    }
+
+    function addCriterionPreset(weightKey) {
+      const nextId = "c" + (criteriaState.length + 1);
+      const titleName = weightKey === 'low' ? "Ortografía y Prolijidad" : "Justificación y Ejemplos";
+      criteriaState.push({
+        id: nextId,
+        title: titleName,
+        weight: weightKey,
+        weightVal: WEIGHT_MAP[weightKey].val
+      });
+      render();
+    }
+
+    function removeCriterion(id) {
+      if (criteriaState.length <= 1) return;
+      criteriaState = criteriaState.filter(c => c.id !== id);
+      render();
+    }
+
+    function resetCriteria() {
+      criteriaState = [
+        { id: "c1", title: "Rigor Técnico y Definiciones", weight: "high", weightVal: 40 },
+        { id: "c2", title: "Claridad en la Explicación", weight: "medium", weightVal: 20 }
+      ];
+      render();
+    }
+
+    function updateSimulation() {
+      render();
+    }
+
+    // Mathematical formula from Ticket 152
+    function calculateSharesAndPoints(criteria, questionPoints) {
+      const totalWeight = criteria.reduce((sum, c) => sum + c.weightVal, 0);
+      return criteria.map(c => {
+        const share = totalWeight > 0 ? (c.weightVal / totalWeight) : (1 / criteria.length);
+        const percent = Math.round(share * 100);
+        const maxPts = Math.round(questionPoints * share * 100) / 100;
+        return {
+          id: c.id,
+          title: c.title,
+          weight: c.weight,
+          percent: percent,
+          maxPts: maxPts
+        };
+      });
+    }
+
+    function formatNumber(num) {
+      return num.toLocaleString("es-AR", { maximumFractionDigits: 2 });
+    }
+
+    function render() {
+      const qPoints = parseFloat(document.getElementById('input-q-points').value) || 10;
+      const breakdown = calculateSharesAndPoints(criteriaState, qPoints);
+      const totalRawWeight = criteriaState.reduce((sum, c) => sum + c.weightVal, 0);
+
+      const oldContainer = document.getElementById('old-world-content');
+      const newContainer = document.getElementById('new-world-content');
+
+      if (currentStep === 1) {
+        // ================= PASO 1: CONFIGURACIÓN DE RÚBRICAS =================
+        
+        // OLD WORLD: Just the cards with 40/20/10 labels, NO breakdown
+        oldContainer.innerHTML = `
+          <div class="mock-panel">
+            <div class="mock-header">
+              <h3>⚙️ Configuración del Examen IA · Paso 1</h3>
+              <span class="badge-ia">✨ Motor IA Activado</span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #475569;">
+              Rúbricas Semánticas: Seleccione los criterios de evaluación.
+            </p>
+
+            ${criteriaState.map(c => `
+              <div class="criterion-card">
+                <div class="crit-top">
+                  <input type="text" class="crit-title-input" value="${c.title}" readonly>
+                  <div class="weight-selector-pill">
+                    <button class="weight-btn ${c.weight === 'high' ? 'selected-high' : ''}" onclick="changeWeight('${c.id}', 'high')">Alto 40%</button>
+                    <button class="weight-btn ${c.weight === 'medium' ? 'selected-medium' : ''}" onclick="changeWeight('${c.id}', 'medium')">Medio 20%</button>
+                    <button class="weight-btn ${c.weight === 'low' ? 'selected-low' : ''}" onclick="changeWeight('${c.id}', 'low')">Bajo 10%</button>
+                  </div>
+                </div>
+                <div class="crit-guidance">Instrucciones semánticas para la IA sobre qué evaluar.</div>
+              </div>
+            `).join('')}
+
+            <div class="missing-info-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div>
+                <strong>Confusión del docente:</strong> Los selectores dicen <em>"Alto 40%"</em> y <em>"Medio 20%"</em> (suma cruda = ${totalRawWeight}%). El docente no tiene forma de saber cómo va a distribuir la IA el puntaje real porque no hay ningún cálculo visible.
+              </div>
+            </div>
+
+            <button style="width: 100%; border: 2px dashed #94A3B8; padding: 12px; border-radius: 6px; background: transparent; color: #475569; font-weight: 600; cursor: pointer;">
+              + Añadir Nuevo Criterio
+            </button>
+          </div>
+        `;
+
+        // NEW WORLD: With CriterionPointsBreakdown (Ticket 166 + 152)
+        newContainer.innerHTML = `
+          <div class="mock-panel">
+            <div class="mock-header">
+              <h3>⚙️ Configuración del Examen IA · Paso 1</h3>
+              <span class="badge-ia">✨ Motor IA Activado</span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #475569;">
+              Rúbricas Semánticas: Seleccione los criterios de evaluación.
+            </p>
+
+            ${criteriaState.map(c => `
+              <div class="criterion-card">
+                <div class="crit-top">
+                  <input type="text" class="crit-title-input" value="${c.title}" readonly>
+                  <div class="weight-selector-pill">
+                    <button class="weight-btn ${c.weight === 'high' ? 'selected-high' : ''}" onclick="changeWeight('${c.id}', 'high')">Alto</button>
+                    <button class="weight-btn ${c.weight === 'medium' ? 'selected-medium' : ''}" onclick="changeWeight('${c.id}', 'medium')">Medio</button>
+                    <button class="weight-btn ${c.weight === 'low' ? 'selected-low' : ''}" onclick="changeWeight('${c.id}', 'low')">Bajo</button>
+                  </div>
+                </div>
+                <div class="crit-guidance">Instrucciones semánticas para la IA sobre qué evaluar.</div>
+              </div>
+            `).join('')}
+
+            <!-- COMPONENTE TICKET 166 (FOOTER PROP) -->
+            <div class="criterion-breakdown-full">
+              <div class="breakdown-header">
+                <span class="breakdown-title">📊 Reparto del puntaje según la rúbrica</span>
+                <span style="font-size: 0.75rem; font-weight: 700; color: #0D9488;">Suma normalizada: 100%</span>
+              </div>
+
+              ${breakdown.map(b => `
+                <div class="breakdown-row">
+                  <div class="breakdown-row-labels">
+                    <span class="breakdown-crit-name">${b.title}</span>
+                    <div class="breakdown-badges">
+                      <span class="badge-percent">${b.percent} %</span>
+                    </div>
+                  </div>
+                  <div class="meter-bar-track">
+                    <div class="meter-bar-fill" style="width: ${b.percent}%;"></div>
+                  </div>
+                </div>
+              `).join('')}
+
+              <div class="helper-text-ticket-166">
+                💡 <strong>El peso indica la importancia relativa:</strong> el puntaje de cada pregunta se reparte en proporción a estos porcentajes.
+              </div>
+              <p class="breakdown-footnote">La IA no puede asignar a un criterio más puntos que su porcentaje.</p>
+            </div>
+
+            <button style="width: 100%; border: 2px dashed #0D9488; padding: 12px; border-radius: 6px; background: rgba(13,148,136,0.04); color: #0D9488; font-weight: 700; cursor: pointer;">
+              + Añadir Nuevo Criterio
+            </button>
+          </div>
+        `;
+
+      } else {
+        // ================= PASO 2: EDITOR DE PREGUNTAS =================
+        
+        // OLD WORLD: No chips in read view, no breakdown in edit view
+        oldContainer.innerHTML = `
+          <div class="mock-panel">
+            <div class="mock-header">
+              <h3>📝 Editor de Preguntas · Paso 2</h3>
+              <span style="font-size: 0.82rem; font-weight: 600; color: #64748B;">Total Examen: ${qPoints} pts</span>
+            </div>
+
+            <!-- PREGUNTA 1 EN LECTURA -->
+            <div class="question-card-mock">
+              <div class="q-header">
+                <div class="q-badge-title">
+                  <span class="badge-pill-p">P1</span>
+                  <span class="q-title">Arquitectura de Microservicios</span>
+                </div>
+                <span class="q-points-badge">${qPoints} Puntos</span>
+              </div>
+
+              <p style="font-size: 0.85rem; color: #334155;">
+                <strong>Prompt:</strong> Explique las ventajas del desacoplamiento y los trade-offs de consistencia eventual.
+              </p>
+
+              <div class="missing-info-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <div>
+                  <strong>Sin desglose por criterio:</strong> El docente solo ve <em>"${qPoints} Puntos"</em>. No sabe qué porción máxima corresponde a cada criterio de la rúbrica ni cuál es el tope de corrección que usará la IA.
+                </div>
+              </div>
+            </div>
+
+            <!-- PREGUNTA EN EDICIÓN -->
+            <div class="question-card-mock" style="border-left: 3px solid #94A3B8;">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #475569; text-transform: uppercase;">
+                Modo Edición Tradicional
+              </div>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <input type="text" value="Arquitectura de Microservicios" style="flex: 1; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-weight: 600;" readonly>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.85rem; font-weight: 600;">Puntos:</span>
+                  <input type="text" value="${qPoints}" style="width: 70px; padding: 8px; border: 1px solid #0F172A; border-radius: 6px; font-weight: 700;" readonly>
+                </div>
+              </div>
+              <div style="font-size: 0.78rem; color: #64748B;">
+                El docente tipea el puntaje a ciegas, sin ver cómo impacta en los criterios.
+              </div>
+            </div>
+          </div>
+        `;
+
+        // NEW WORLD: Compact chips in Read View, live full breakdown in Edit View (Ticket 167)
+        newContainer.innerHTML = `
+          <div class="mock-panel">
+            <div class="mock-header">
+              <h3>📝 Editor de Preguntas · Paso 2</h3>
+              <span style="font-size: 0.82rem; font-weight: 700; color: #0D9488;">Total Examen: ${qPoints} pts</span>
+            </div>
+
+            <!-- PREGUNTA 1 EN LECTURA CON COMPACT BREAKDOWN -->
+            <div class="question-card-mock">
+              <div class="q-header">
+                <div class="q-badge-title">
+                  <span class="badge-pill-p">P1</span>
+                  <span class="q-title">Arquitectura de Microservicios</span>
+                </div>
+                <span class="q-points-badge" style="color: #0D9488;">${qPoints} Puntos</span>
+              </div>
+
+              <p style="font-size: 0.85rem; color: #334155;">
+                <strong>Prompt:</strong> Explique las ventajas del desacoplamiento y los trade-offs de consistencia eventual.
+              </p>
+
+              <!-- COMPACT CHIPS (TICKET 167) -->
+              <div class="compact-chips-container">
+                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #64748B; width: 100%;">
+                  Tope de puntos por criterio (IA):
+                </span>
+                ${breakdown.map(b => `
+                  <span class="chip-criterion">
+                    ${b.title} · <strong>hasta ${formatNumber(b.maxPts)} pts</strong> (${b.percent}%)
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- PREGUNTA EN EDICIÓN CON FULL LIVE BREAKDOWN -->
+            <div class="question-card-mock is-editing">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #0D9488;">
+                  ✏️ Formulario de Edición (Ticket #167)
+                </span>
+                <span style="font-size: 0.75rem; color: #64748B;">Se actualiza al escribir</span>
+              </div>
+
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <input type="text" value="Arquitectura de Microservicios" style="flex: 1; padding: 8px 12px; border: 1px solid #CBD5E1; border-radius: 6px; font-weight: 600;" readonly>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.85rem; font-weight: 700;">Puntos:</span>
+                  <input type="number" value="${qPoints}" style="width: 80px; padding: 8px; border: 2px solid #0D9488; border-radius: 6px; font-weight: 800; font-size: 1rem; color: #0F766E;" oninput="document.getElementById('input-q-points').value = this.value; updateSimulation();">
+                </div>
+              </div>
+
+              <!-- FULL BREAKDOWN EN EDICIÓN (TICKET 167) -->
+              <div class="criterion-breakdown-full" style="background: #F8FAFC;">
+                <div class="breakdown-header">
+                  <span class="breakdown-title">🎯 Reparto en vivo para esta pregunta (${qPoints} pts):</span>
+                  <span style="font-size: 0.75rem; font-weight: 700; color: #0F766E;">Tope máximo IA</span>
+                </div>
+
+                ${breakdown.map(b => `
+                  <div class="breakdown-row">
+                    <div class="breakdown-row-labels">
+                      <span class="breakdown-crit-name">${b.title}</span>
+                      <div class="breakdown-badges">
+                        <span class="badge-percent">${b.percent} %</span>
+                        <span class="badge-pts-max">hasta ${formatNumber(b.maxPts)} pts</span>
+                      </div>
+                    </div>
+                    <div class="meter-bar-track">
+                      <div class="meter-bar-fill" style="width: ${b.percent}%;"></div>
+                    </div>
+                  </div>
+                `).join('')}
+
+                <div class="callout-success-box">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                  <div>
+                    <strong>Validación garantizada:</strong> El docente sabe exactamente que si el alumno responde perfecto en <em>"${breakdown[0].title}"</em>, la IA le dará como máximo <strong>${formatNumber(breakdown[0].maxPts)} pts</strong> de los ${qPoints} posibles.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

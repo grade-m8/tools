@@ -1,0 +1,12 @@
+{
+  "name": "grade-m8-sprint-hub",
+  "version": "1.0.0",
+  "description": "Visualizador de tickets y puente en vivo con GitHub Projects para Grade-M8",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["sprint", "kanban", "github", "grade-m8"],
+  "author": "Grade-M8 Team",
+  "license": "ISC"
+}

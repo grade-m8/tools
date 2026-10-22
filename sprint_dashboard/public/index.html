@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRADE-M8 · Sprint Hub & Live Kanban Bridge</title>
+  <meta name="description" content="Visualizador de tickets locales y puente en tiempo real con GitHub Projects para Grade-M8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header -->
+    <header class="top-nav" id="main-header">
+      <div class="brand">
+        <div class="logo-icon">M8</div>
+        <div class="brand-text">
+          <h1>Grade-M8 <span class="badge-tag">Sprint Hub</span></h1>
+          <p class="subtitle">Módulos 4.4 & 4.5 · Planificación y Puente GitHub Live</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="live-pill" id="github-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="github-status-text">GitHub Project 1: Conectado</span>
+        </div>
+        <button id="btn-sync-live" class="btn btn-secondary">
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          <span id="sync-btn-label">Sincronizar Live</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Executive Overview Metrics -->
+    <section class="metrics-grid" id="metrics-overview">
+      <div class="metric-card card-tomi" id="metric-tomi">
+        <div class="metric-header">
+          <span class="dev-avatar">TB</span>
+          <span class="dev-name">Tomi Bregoli</span>
+          <span class="role-pill">Rúbricas & UI</span>
+        </div>
+        <div class="metric-body">
+          <div class="hours-val"><span id="hours-tomi">6.0</span> <small>/ 6.0 hs</small></div>
+          <div class="progress-bar"><div class="progress-fill fill-tomi" id="progress-tomi" style="width: 100%"></div></div>
+        </div>
+        <div class="metric-footer">
+          <span id="metric-count-tomi">3 tickets (Sprint 22-29/10)</span>
+          <span class="status-indicator" id="metric-status-tomi">Balance 100%</span>
+        </div>
+      </div>
+
+      <div class="metric-card card-facu" id="metric-facu">
+        <div class="metric-header">
+          <span class="dev-avatar">FG</span>
+          <span class="dev-name">Facu García</span>
+          <span class="role-pill">Reintentos & Badges</span>
+        </div>
+        <div class="metric-body">
+          <div class="hours-val"><span id="hours-facu">6.0</span> <small>/ 6.0 hs</small></div>
+          <div class="progress-bar"><div class="progress-fill fill-facu" id="progress-facu" style="width: 100%"></div></div>
+        </div>
+        <div class="metric-footer">
+          <span id="metric-count-facu">6 tickets (Sprint 22-29/10)</span>
+          <span class="status-indicator" id="metric-status-facu">Balance 100%</span>
+        </div>
+      </div>
+
+      <div class="metric-card card-lulo" id="metric-lulo">
+        <div class="metric-header">
+          <span class="dev-avatar">LR</span>
+          <span class="dev-name">Luciano Renkine</span>
+          <span class="role-pill">Banco Pruebas IA</span>
+        </div>
+        <div class="metric-body">
+          <div class="hours-val"><span id="hours-lulo">6.0</span> <small>/ 6.0 hs</small></div>
+          <div class="progress-bar"><div class="progress-fill fill-lulo" id="progress-lulo" style="width: 100%"></div></div>
+        </div>
+        <div class="metric-footer">
+          <span id="metric-count-lulo">3 tickets (Sprint 22-29/10)</span>
+          <span class="status-indicator" id="metric-status-lulo">Balance 100%</span>
+        </div>
+      </div>
+
+      <div class="metric-card card-sprint" id="metric-total">
+        <div class="metric-header">
+          <span class="dev-avatar total-avatar">🎯</span>
+          <span class="dev-name">Sprint 22 al 29 Oct</span>
+          <span class="role-pill">Capacidad</span>
+        </div>
+        <div class="metric-body">
+          <div class="hours-val"><span id="hours-total">18.0</span> <small>/ 18.0 hs</small></div>
+          <div class="progress-bar"><div class="progress-fill fill-total" id="progress-total" style="width: 100%"></div></div>
+        </div>
+        <div class="metric-footer">
+          <span id="count-total">12 tickets asignados</span>
+          <span class="status-indicator success" id="status-total">Optimizada</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation & Filter Bar -->
+    <nav class="nav-control-bar" id="control-bar">
+      <div class="tab-buttons" role="tablist">
+        <button class="tab-btn active" id="tab-btn-devs" data-tab="devs-board">
+          📋 Tableros por Dev (Next Week)
+        </button>
+        <button class="tab-btn" id="tab-btn-kanban" data-tab="kanban-bridge">
+          ⚡ Puente GitHub Kanban Live
+        </button>
+        <button class="tab-btn" id="tab-btn-gap" data-tab="gap-analysis">
+          🧭 Gap Analysis & Roadmap
+        </button>
+        <button class="tab-btn" id="tab-btn-all" data-tab="all-tickets">
+          📦 Catálogo Completo (17)
+        </button>
+        <a href="/comparativa-rubrica.html" target="_blank" class="tab-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color:#818cf8; color:#e0e7ff; font-weight:600;">
+          ✨ Comparativa Rúbrica (152, 166, 167) ↗
+        </a>
+      </div>
+
+      <div class="filter-controls">
+        <input type="text" id="input-search" class="search-input" placeholder="🔍 Buscar ticket, ID o módulo..." />
+        <select id="select-filter-module" class="filter-select">
+          <option value="all">Todos los módulos</option>
+          <option value="4.4.1">Módulo 4.4.1 (Rúbricas & IA)</option>
+          <option value="4.5.1">Módulo 4.5.1 (UI Auditoría)</option>
+          <option value="4.5.2">Módulo 4.5.2 (Servicio Reintento)</option>
+          <option value="4.5.3">Módulo 4.5.3 (Integración Auditoría)</option>
+        </select>
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-container" id="main-content">
+      
+      <!-- TAB 1: Tablero por Desarrollador (Next Week) -->
+      <section class="tab-pane active" id="pane-devs-board">
+        <div class="sprint-header-banner">
+          <div>
+            <h2>Sprint Plan: 22 de Octubre al 29 de Octubre de 2026</h2>
+            <p><strong>18.0 horas comprometidas</strong> (6.0 hs c/u: Tomi, Facu, Lulo) en <strong>12 tickets</strong> · <em>(Los otros 3 tickets en Backlog en GitHub corresponden al sprint siguiente del 29/10: Reintento Masivo)</em>.</p>
+          </div>
+          <div class="banner-badge">Semana Clave (22-29 Oct)</div>
+        </div>
+
+        <!-- Active Sprint (This week until 22/10) -->
+        <div class="active-sprint-banner" id="active-sprint-container">
+          <div class="active-sprint-info">
+            <div class="active-title-row">
+              <span class="active-pulse"></span>
+              <h4>Sprint Actual en Curso (Finaliza este Jueves 22/10)</h4>
+              <span class="active-pill" id="active-tickets-pill">1 ticket activo en Todo</span>
+            </div>
+            <p>Tarea de cierre que tiene Tomi Bregoli antes del inicio formal del sprint del 22 de Octubre:</p>
+          </div>
+          <div class="active-sprint-cards" id="active-sprint-list">
+            <!-- Rendered via JS (#159 y #131) -->
+          </div>
+        </div>
+
+        <div class="devs-grid">
+          <!-- Column Tomi -->
+          <div class="dev-column col-tomi" id="col-tomi">
+            <div class="dev-col-header">
+              <div class="dev-title">
+                <span class="avatar-sm">TB</span>
+                <div>
+                  <h3>Tomi Bregoli</h3>
+                  <small>@tomibrg · 6.0 hs asignadas</small>
+                </div>
+              </div>
+              <span class="count-tag" id="count-tomi">3 tickets</span>
+            </div>
+            <a href="/comparativa-rubrica.html" target="_blank" style="margin: 0 16px 12px 16px; padding: 10px 14px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 8px; color: #e0e7ff; font-size: 0.82rem; text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; transition: all 0.2s ease;">
+              <span><strong>⚡ Probar Interactivo</strong>: Comparativa Mundo Viejo vs. Actual (Tickets 152, 166, 167)</span>
+              <span style="font-size: 1rem;">↗</span>
+            </a>
+            <div class="cards-list" id="list-tomi">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Column Facu -->
+          <div class="dev-column col-facu" id="col-facu">
+            <div class="dev-col-header">
+              <div class="dev-title">
+                <span class="avatar-sm">FG</span>
+                <div>
+                  <h3>Facu García</h3>
+                  <small>@Facugarciar0805 · 6.0 hs asignadas</small>
+                </div>
+              </div>
+              <span class="count-tag" id="count-facu">6 tickets</span>
+            </div>
+            <div class="cards-list" id="list-facu">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Column Lulo -->
+          <div class="dev-column col-lulo" id="col-lulo">
+            <div class="dev-col-header">
+              <div class="dev-title">
+                <span class="avatar-sm">LR</span>
+                <div>
+                  <h3>Luciano Renkine</h3>
+                  <small>@LucianoRenkine · 6.0 hs asignadas</small>
+                </div>
+              </div>
+              <span class="count-tag" id="count-lulo">3 tickets</span>
+            </div>
+            <div class="cards-list" id="list-lulo">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Puente GitHub Kanban Live -->
+      <section class="tab-pane" id="pane-kanban-bridge">
+        <div class="kanban-bridge-header">
+          <div>
+            <h2>Estado Real en GitHub Projects (Project 1)</h2>
+            <p>Monitoreo en vivo de qué tickets están en GitHub, en qué columna y si hay discrepancias de asignación con el plan local.</p>
+          </div>
+          <div class="live-tag">
+            <span class="pulse-dot"></span> <span id="bridge-last-sync">Actualizado hace un momento</span>
+          </div>
+        </div>
+
+        <div class="kanban-bridge-grid">
+          <!-- Backlog Column -->
+          <div class="bridge-col" id="bridge-col-backlog">
+            <div class="bridge-col-header header-backlog">
+              <span>📋 Backlog</span>
+              <span class="badge" id="badge-count-backlog">0</span>
+            </div>
+            <div class="bridge-cards-container" id="bridge-cards-backlog"></div>
+          </div>
+
+          <!-- Next Week Column -->
+          <div class="bridge-col" id="bridge-col-next-week">
+            <div class="bridge-col-header header-next-week">
+              <span>📅 Next Week (22-29 Oct)</span>
+              <span class="badge" id="badge-count-next-week">0</span>
+            </div>
+            <div class="bridge-cards-container" id="bridge-cards-next-week"></div>
+          </div>
+
+          <!-- Todo Column -->
+          <div class="bridge-col" id="bridge-col-todo">
+            <div class="bridge-col-header header-todo">
+              <span>🚀 Todo (Activo)</span>
+              <span class="badge" id="badge-count-todo">0</span>
+            </div>
+            <div class="bridge-cards-container" id="bridge-cards-todo"></div>
+          </div>
+
+          <!-- In Progress Column -->
+          <div class="bridge-col" id="bridge-col-in-progress">
+            <div class="bridge-col-header header-in-progress">
+              <span>⚙️ In Progress</span>
+              <span class="badge" id="badge-count-in-progress">0</span>
+            </div>
+            <div class="bridge-cards-container" id="bridge-cards-in-progress"></div>
+          </div>
+
+          <!-- In Review Column -->
+          <div class="bridge-col" id="bridge-col-in-review">
+            <div class="bridge-col-header header-in-review">
+              <span>👀 In Review</span>
+              <span class="badge" id="badge-count-in-review">0</span>
+            </div>
+            <div class="bridge-cards-container" id="bridge-cards-in-review"></div>
+          </div>
+        </div>
+
+        <div class="discrepancy-card" id="discrepancy-panel">
+          <h3>🔍 Auditoría de Alineación (Local vs GitHub Projects)</h3>
+          <div class="discrepancy-content" id="discrepancy-list">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Gap Analysis & Roadmap -->
+      <section class="tab-pane" id="pane-gap-analysis">
+        <div class="roadmap-header">
+          <h2>Análisis de Brecha y Cronograma hacia el Cierre de la Materia</h2>
+          <p>Mapeo de features implementadas hoy, entregadas el 29/10 y sprint final hacia el Code Freeze del 04/11.</p>
+        </div>
+
+        <div class="timeline-container">
+          <div class="timeline-step step-done">
+            <div class="step-marker">✓</div>
+            <div class="step-content">
+              <span class="step-date">Hoy (20 de Octubre)</span>
+              <h4>Base Funcional & Auditoría Operativa</h4>
+              <p>Veredicto de IA y redondeo a 2 decimales (#127-#130). Aprobación individual y edición de análisis en auditoría mergeados (#105 / PR #163). Extractor y catálogo de KPIs en producción.</p>
+              <div class="tag-row">
+                <span class="pill-done">Mergeado</span>
+                <span class="pill-info">KPIs en Supabase</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-step step-current">
+            <div class="step-marker">●</div>
+            <div class="step-content">
+              <span class="step-date">Jueves 22 al Jueves 29 de Octubre (18.0 hs)</span>
+              <h4>Sprint Plan de Consolidación</h4>
+              <p>Rúbricas semánticas y ponderación visual en UI (#152, #120, #121). Flujo completo de reintento individual y aviso de fallos (#107-#109, #150, #151). Banco de pruebas offline del prompt (#117-#119).</p>
+              <div class="tag-row">
+                <span class="pill-active">En Planificación</span>
+                <span class="pill-hours">18.0 hs (6h/dev)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-step step-future">
+            <div class="step-marker">3</div>
+            <div class="step-content">
+              <span class="step-date">Jueves 29 de Octubre al Martes 03 de Noviembre</span>
+              <h4>Sprint Final: Reintento Masivo & Hardening (4.5 hs)</h4>
+              <p>Endpoint y servicio de reintento masivo por examen (#110, #111) y botón masivo en lista de entregas (#112). 13.5 hs de buffer para testing y hardening.</p>
+              <div class="tag-row">
+                <span class="pill-future">Sprint Final</span>
+                <span class="pill-hours">4.5 hs core</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-step step-milestone">
+            <div class="step-marker">🏁</div>
+            <div class="step-content">
+              <span class="step-date">03/11 Feature Complete · 04/11 Code Freeze · 12/11 Entrega Final</span>
+              <h4>Cierre de Ciclo Académico</h4>
+              <p>Módulos 4.4 y 4.5 100% operativos. Congelamiento estricto de código para preparación de la defensa final ante la cátedra.</p>
+              <div class="tag-row">
+                <span class="pill-milestone">Feature Complete: 03/11</span>
+                <span class="pill-milestone">Code Freeze: 04/11</span>
+                <span class="pill-milestone">Defensa: 12/11</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Catálogo Completo de Tickets -->
+      <section class="tab-pane" id="pane-all-tickets">
+        <div class="catalog-header">
+          <h2>Todos los Tickets Locales Estructurados (16 tickets)</h2>
+          <p>Repositorio local completo con especificaciones, estimaciones y enlaces directos a GitHub.</p>
+        </div>
+
+        <div class="table-container">
+          <table class="tickets-table" id="all-tickets-table">
+            <thead>
+              <tr>
+                <th>ID / Repo</th>
+                <th>Título</th>
+                <th>Dev Asignado</th>
+                <th>Horas</th>
+                <th>Sprint</th>
+                <th>Módulo</th>
+                <th>Capa</th>
+                <th>Estado GitHub</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="table-body-tickets">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Slide-out Ticket Detail Drawer -->
+    <div class="drawer-overlay" id="ticket-drawer-overlay">
+      <div class="drawer" id="ticket-drawer">
+        <div class="drawer-header">
+          <div class="drawer-title-group">
+            <span class="drawer-tag" id="drawer-tag">frontend#152</span>
+            <span class="drawer-hours" id="drawer-hours">2.0 hs</span>
+            <span class="drawer-status" id="drawer-status">Backlog</span>
+          </div>
+          <button class="drawer-close" id="btn-close-drawer">&times;</button>
+        </div>
+
+        <div class="drawer-body">
+          <h2 class="drawer-title" id="drawer-title">Título del Ticket</h2>
+          
+          <div class="drawer-metadata-grid" id="drawer-meta-grid">
+            <div class="meta-item">
+              <label>Desarrollador:</label>
+              <span id="drawer-dev">Tomi Bregoli</span>
+            </div>
+            <div class="meta-item">
+              <label>Sprint:</label>
+              <span id="drawer-sprint">Sprint 22/10 - 29/10</span>
+            </div>
+            <div class="meta-item">
+              <label>Módulo:</label>
+              <span id="drawer-module">4.4.1</span>
+            </div>
+            <div class="meta-item">
+              <label>Capa:</label>
+              <span id="drawer-layer">Frontend</span>
+            </div>
+            <div class="meta-item">
+              <label>Dependencias:</label>
+              <span id="drawer-deps">Ninguna</span>
+            </div>
+            <div class="meta-item">
+              <label>Bloquea a:</label>
+              <span id="drawer-blocks">frontend#166, frontend#167</span>
+            </div>
+          </div>
+
+          <div class="drawer-actions-bar">
+            <a href="#" target="_blank" id="drawer-gh-link" class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              Abrir en GitHub
+            </a>
+            <button id="btn-copy-markdown" class="btn btn-primary">
+              📋 Copiar Especificación Markdown
+            </button>
+          </div>
+
+          <div class="drawer-markdown" id="drawer-rendered-markdown">
+            <!-- Full ticket content rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
