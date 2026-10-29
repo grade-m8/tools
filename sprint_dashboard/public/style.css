@@ -331,6 +331,108 @@ body {
   font-weight: 600;
 }
 
+/* Sprint & Folder Selector Bar */
+.folder-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.folder-selector-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folder-selector-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folder-pills {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.folder-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.folder-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.folder-pill.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(20, 184, 166, 0.25));
+  border-color: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 0 15px -3px rgba(99, 102, 241, 0.4);
+}
+
+.folder-pill .pill-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.folder-pill .pill-badge-active {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.folder-pill .pill-count {
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+}
+
+.folder-pill.active .pill-count {
+  background: rgba(99, 102, 241, 0.3);
+  color: #e0e7ff;
+}
+
+.tag-folder {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+}
+
 /* Control Navigation & Filter Bar */
 .nav-control-bar {
   display: flex;
@@ -549,8 +651,9 @@ body {
 /* Developers Grid Columns */
 .devs-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+  width: 100%;
 }
 
 .dev-column {
@@ -562,6 +665,10 @@ body {
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .col-tomi { border-top: 3px solid var(--color-tomi); }
@@ -575,12 +682,14 @@ body {
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 16px;
+  min-width: 0;
 }
 
 .dev-title {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .avatar-sm {
@@ -593,6 +702,7 @@ body {
   font-weight: 700;
   font-size: 0.8rem;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .col-tomi .avatar-sm { background: var(--color-tomi); }
@@ -604,11 +714,18 @@ body {
   font-size: 1.05rem;
   font-weight: 700;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dev-title small {
   font-size: 0.75rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .count-tag {
@@ -618,6 +735,7 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-full);
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 /* Cards List */
@@ -626,6 +744,8 @@ body {
   flex-direction: column;
   gap: 12px;
   flex-grow: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 /* Individual Ticket Card */
@@ -640,6 +760,12 @@ body {
   flex-direction: column;
   gap: 10px;
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .ticket-card:hover {
@@ -653,6 +779,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .ticket-id {
@@ -660,6 +789,7 @@ body {
   font-size: 0.78rem;
   font-weight: 600;
   color: #818cf8;
+  word-break: break-all;
 }
 
 .ticket-hours-badge {
@@ -671,6 +801,7 @@ body {
   background: rgba(245, 158, 11, 0.15);
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
+  flex-shrink: 0;
 }
 
 .ticket-title {
@@ -678,6 +809,8 @@ body {
   font-weight: 600;
   color: #f8fafc;
   line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .ticket-meta-row {
@@ -685,6 +818,7 @@ body {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  max-width: 100%;
 }
 
 .meta-tag {
@@ -692,6 +826,10 @@ body {
   padding: 2px 7px;
   border-radius: 4px;
   font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tag-module {
@@ -720,16 +858,22 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-width: 100%;
 }
 
 .dep-badge {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 4px 9px;
+  padding: 5px 9px;
   border-radius: 4px;
   font-size: 0.72rem;
-  line-height: 1.25;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .dep-badge.blocked {
@@ -754,11 +898,13 @@ body {
 }
 
 .chip-tag {
+  display: inline-block;
   background: rgba(255, 255, 255, 0.12);
   padding: 1px 6px;
   border-radius: 3px;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
+  word-break: break-all;
 }
 
 /* Kanban Bridge Tab */
@@ -1319,4 +1465,98 @@ body {
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
+
+/* ========================================================
+   Folder / Sprint Selector Bar
+   ======================================================== */
+.folder-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+}
+
+.folder-selector-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.folder-selector-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.folder-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.folder-pill {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+
+.folder-pill:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.folder-pill.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
+  border-color: #818cf8;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+}
+
+.folder-pill.active .pill-count {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.pill-count {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.tag-folder {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+}
+
 

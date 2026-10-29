@@ -4,6 +4,7 @@ let allTickets = [];
 let liveKanban = null;
 let currentTab = 'devs-board';
 let activeTicket = null;
+let selectedFolder = 'sprint_29_03_nov'; // Default to the newly created Sprint (29/10 - 05/11)
 
 // DOM Elements
 const tabBtns = document.querySelectorAll('.tab-btn');
@@ -43,6 +44,18 @@ function setupEventListeners() {
     btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-tab');
       switchTab(target);
+    });
+  });
+
+  // Folder Pills Event Listeners
+  const folderPills = document.querySelectorAll('.folder-pill');
+  folderPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      folderPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedFolder = pill.getAttribute('data-folder');
+      renderDeveloperBoard();
+      filterCards();
     });
   });
 
@@ -96,8 +109,37 @@ async function refreshData(force = false) {
     allTickets = await ticketsRes.json();
     liveKanban = await liveRes.json();
 
+    // Normalize folder property defensively
+    allTickets.forEach(t => {
+      if (!t.folder) {
+        const parts = (t.filePath || '').replace(/\\/g, '/').split('/');
+        t.folder = parts.length > 1 ? parts[1] : 'root';
+      }
+    });
+
+    // Update Folder Pills Counts
+    const count29 = allTickets.filter(t => t.folder === 'sprint_29_03_nov').length;
+    const count22 = allTickets.filter(t => t.folder === 'sprint_22_29_oct').length;
+    const countActive = allTickets.filter(t => t.folder === 'active_sprint').length;
+    const countTotal = allTickets.length;
+
+    const elPill29 = document.getElementById('count-pill-29-03');
+    const elPill22 = document.getElementById('count-pill-22-29');
+    const elPillActive = document.getElementById('count-pill-active');
+    const elPillAll = document.getElementById('count-pill-all');
+    const elTabAll = document.getElementById('tab-count-all');
+    const elCatTotal = document.getElementById('catalog-total-count');
+
+    if (elPill29) elPill29.textContent = count29;
+    if (elPill22) elPill22.textContent = count22;
+    if (elPillActive) elPillActive.textContent = countActive;
+    if (elPillAll) elPillAll.textContent = countTotal;
+    if (elTabAll) elTabAll.textContent = countTotal;
+    if (elCatTotal) elCatTotal.textContent = `${countTotal} tickets`;
+
     githubStatusText.textContent = `GitHub Project 1: Conectado (${liveKanban.projectItemsCount} items)`;
-    document.getElementById('bridge-last-sync').textContent = `Actualizado ${new Date().toLocaleTimeString('es-AR')}`;
+    const elBridgeSync = document.getElementById('bridge-last-sync');
+    if (elBridgeSync) elBridgeSync.textContent = `Actualizado ${new Date().toLocaleTimeString('es-AR')}`;
 
     renderAll();
   } catch (err) {
@@ -117,9 +159,10 @@ function renderAll() {
   renderDiscrepancies();
 }
 
-// 1. Render Developer Board (Sprint 22-29 Oct)
+// 1. Render Developer Board (Filtrado por Carpeta / Sprint)
 function renderDeveloperBoard() {
   const activeSprintList = document.getElementById('active-sprint-list');
+  const activeSprintContainer = document.getElementById('active-sprint-container');
   const listTomi = document.getElementById('list-tomi');
   const listFacu = document.getElementById('list-facu');
   const listLulo = document.getElementById('list-lulo');
@@ -129,12 +172,35 @@ function renderDeveloperBoard() {
   listFacu.innerHTML = '';
   listLulo.innerHTML = '';
 
-  // 1. Active Sprint (tareas en curso hasta 22/10)
-  const activeTickets = allTickets.filter(t => 
-    (t.sprint || '').toLowerCase().includes('activo') || 
-    (t.sprint || '').toLowerCase().includes('hasta 22/10')
-  );
+  // Banner Header Dynamic Text
+  const sprintTitle = document.getElementById('sprint-banner-title');
+  const sprintDesc = document.getElementById('sprint-banner-desc');
+  const sprintBadge = document.getElementById('sprint-banner-badge');
 
+  if (selectedFolder === 'sprint_29_03_nov') {
+    if (sprintTitle) sprintTitle.textContent = 'Sprint Plan: 29 de Octubre al 5 de Noviembre de 2026';
+    if (sprintDesc) sprintDesc.innerHTML = '<strong>18.0 horas comprometidas</strong> (6.0 hs c/u: Tomi, Facu, Lulo) en <strong>11 tickets</strong> · Cierre de Exámenes, Aprobación Individual y Reintentos Masivos.';
+    if (sprintBadge) sprintBadge.textContent = 'Sprint 29/10 - 05/11';
+    if (activeSprintContainer) activeSprintContainer.style.display = 'none';
+  } else if (selectedFolder === 'sprint_22_29_oct') {
+    if (sprintTitle) sprintTitle.textContent = 'Sprint Plan: 22 de Octubre al 29 de Octubre de 2026';
+    if (sprintDesc) sprintDesc.innerHTML = '<strong>18.0 horas comprometidas</strong> (6.0 hs c/u: Tomi, Facu, Lulo) en <strong>12 tickets</strong> · Reintentos de Corrección y Banco de Pruebas IA.';
+    if (sprintBadge) sprintBadge.textContent = 'Semana Clave (22-29 Oct)';
+    if (activeSprintContainer) activeSprintContainer.style.display = 'block';
+  } else if (selectedFolder === 'active_sprint') {
+    if (sprintTitle) sprintTitle.textContent = 'Sprint Actual en Curso (Tareas Previas)';
+    if (sprintDesc) sprintDesc.innerHTML = 'Tareas activas de semanas previas en ejecución hasta el inicio formal de los sprints planificados.';
+    if (sprintBadge) sprintBadge.textContent = 'Sprint Activo';
+    if (activeSprintContainer) activeSprintContainer.style.display = 'block';
+  } else {
+    if (sprintTitle) sprintTitle.textContent = 'Todos los Sprints y Tareas Planificadas';
+    if (sprintDesc) sprintDesc.innerHTML = `Visualización consolidada de <strong>${allTickets.length} tickets</strong> en todas las carpetas del repositorio.`;
+    if (sprintBadge) sprintBadge.textContent = 'Vista Consolidada';
+    if (activeSprintContainer) activeSprintContainer.style.display = 'block';
+  }
+
+  // 1. Active Sprint (tareas en curso hasta 22/10)
+  const activeTickets = allTickets.filter(t => t.folder === 'active_sprint');
   if (activeSprintList) {
     activeTickets.forEach(ticket => {
       const card = createActiveTicketCard(ticket);
@@ -146,8 +212,13 @@ function renderDeveloperBoard() {
     }
   }
 
-  // 2. Sprint 22 al 29 de Octubre (Next Week) estrictamente
-  const sprintTickets = allTickets.filter(t => (t.sprint || '').startsWith('Sprint 22/10'));
+  // 2. Tickets according to selected folder
+  let sprintTickets = [];
+  if (selectedFolder === 'all') {
+    sprintTickets = allTickets;
+  } else {
+    sprintTickets = allTickets.filter(t => t.folder === selectedFolder);
+  }
 
   let countTomi = 0, countFacu = 0, countLulo = 0;
   let hoursTomi = 0, hoursFacu = 0, hoursLulo = 0;
@@ -157,28 +228,28 @@ function renderDeveloperBoard() {
     const dev = (ticket.assignee_local || '').toLowerCase();
     const h = Number(ticket.hours) || 0;
 
-    if (dev.includes('tomi')) {
+    if (dev.includes('tomi') || dev.includes('tomas') || dev.includes('tomás') || dev.includes('bregoli')) {
       listTomi.appendChild(card);
       countTomi++;
       hoursTomi += h;
-    } else if (dev.includes('facu')) {
+    } else if (dev.includes('facu') || dev.includes('garcia') || dev.includes('garcía')) {
       listFacu.appendChild(card);
       countFacu++;
       hoursFacu += h;
-    } else if (dev.includes('lulo') || dev.includes('luciano')) {
+    } else if (dev.includes('lulo') || dev.includes('luciano') || dev.includes('renkine')) {
       listLulo.appendChild(card);
       countLulo++;
       hoursLulo += h;
     }
   });
 
-  // Update counters and hours dynamically
+  // Update counters and hours in dev column headers
   const elCountTomi = document.getElementById('count-tomi');
   const elCountFacu = document.getElementById('count-facu');
   const elCountLulo = document.getElementById('count-lulo');
-  if (elCountTomi) elCountTomi.textContent = `${countTomi} tickets`;
-  if (elCountFacu) elCountFacu.textContent = `${countFacu} tickets`;
-  if (elCountLulo) elCountLulo.textContent = `${countLulo} tickets`;
+  if (elCountTomi) elCountTomi.textContent = `${countTomi} ticket${countTomi !== 1 ? 's' : ''}`;
+  if (elCountFacu) elCountFacu.textContent = `${countFacu} ticket${countFacu !== 1 ? 's' : ''}`;
+  if (elCountLulo) elCountLulo.textContent = `${countLulo} ticket${countLulo !== 1 ? 's' : ''}`;
 
   const elHoursTomi = document.getElementById('hours-tomi');
   const elHoursFacu = document.getElementById('hours-facu');
@@ -188,6 +259,10 @@ function renderDeveloperBoard() {
   if (elHoursLulo) elHoursLulo.textContent = hoursLulo.toFixed(1);
 
   // Update dev card footers and progress bars
+  const folderLabel = selectedFolder === 'sprint_29_03_nov' ? 'Sprint 29/10-05/11' :
+                      selectedFolder === 'sprint_22_29_oct' ? 'Sprint 22-29/10' :
+                      selectedFolder === 'active_sprint' ? 'Sprint Activo' : 'Todas las carpetas';
+
   const devsData = [
     { key: 'tomi', hours: hoursTomi, count: countTomi },
     { key: 'facu', hours: hoursFacu, count: countFacu },
@@ -197,7 +272,7 @@ function renderDeveloperBoard() {
     const elCount = document.getElementById(`metric-count-${d.key}`);
     const elProg = document.getElementById(`progress-${d.key}`);
     const elStat = document.getElementById(`metric-status-${d.key}`);
-    if (elCount) elCount.textContent = `${d.count} tickets (Sprint 22-29/10)`;
+    if (elCount) elCount.textContent = `${d.count} tickets (${folderLabel})`;
     if (elProg) elProg.style.width = `${Math.min(100, Math.round((d.hours / 6.0) * 100))}%`;
     if (elStat) {
       if (d.hours === 6.0) {
@@ -207,7 +282,7 @@ function renderDeveloperBoard() {
         elStat.textContent = `${(6.0 - d.hours).toFixed(1)}h pendientes`;
         elStat.className = 'status-indicator';
       } else {
-        elStat.textContent = 'Sobrecarga';
+        elStat.textContent = `${(d.hours - 6.0).toFixed(1)}h extra`;
         elStat.className = 'status-indicator danger';
       }
     }
@@ -220,11 +295,14 @@ function renderDeveloperBoard() {
   const elCountTotal = document.getElementById('count-total');
   const elProgressTotal = document.getElementById('progress-total');
   const elStatusTotal = document.getElementById('status-total');
+  const elMetricTotalTitle = document.getElementById('metric-title-total');
 
+  if (elMetricTotalTitle) elMetricTotalTitle.textContent = folderLabel;
   if (elHoursTotal) elHoursTotal.textContent = totalHours.toFixed(1);
   if (elCountTotal) elCountTotal.textContent = `${totalTickets} ticket${totalTickets !== 1 ? 's' : ''} asignado${totalTickets !== 1 ? 's' : ''}`;
   if (elProgressTotal) {
-    const pct = Math.min(100, Math.round((totalHours / 18.0) * 100));
+    const targetHours = selectedFolder === 'all' ? (totalHours > 0 ? totalHours : 18.0) : 18.0;
+    const pct = Math.min(100, Math.round((totalHours / targetHours) * 100));
     elProgressTotal.style.width = `${pct}%`;
   }
   if (elStatusTotal) {
@@ -235,7 +313,7 @@ function renderDeveloperBoard() {
       elStatusTotal.textContent = `${(18.0 - totalHours).toFixed(1)}h pendientes`;
       elStatusTotal.className = 'status-indicator';
     } else {
-      elStatusTotal.textContent = 'Sobrecarga';
+      elStatusTotal.textContent = `${(totalHours - 18.0).toFixed(1)}h sobrecarga`;
       elStatusTotal.className = 'status-indicator danger';
     }
   }
@@ -305,6 +383,8 @@ function createTicketCard(ticket) {
     depHtml += `<div class="dep-badge ready">🟢 Sin bloqueos (Listo para arrancar)</div>`;
   }
 
+  const folderTag = ticket.folder ? `<span class="meta-tag tag-folder">📁 ${ticket.folder}</span>` : '';
+
   card.innerHTML = `
     <div class="ticket-top">
       <span class="ticket-id">${ticket.id}</span>
@@ -314,6 +394,7 @@ function createTicketCard(ticket) {
     <div class="ticket-meta-row">
       <span class="meta-tag tag-module">Mod ${ticket.module}</span>
       <span class="meta-tag tag-layer">${ticket.layer}</span>
+      ${folderTag}
       <span class="meta-tag tag-kanban ${kanbanClass}">${isLinked ? kanbanStatus : 'No en Project 1'}</span>
     </div>
     <div class="ticket-deps">
@@ -478,7 +559,7 @@ function renderAllTicketsTable() {
 
   allTickets.forEach(ticket => {
     const tr = document.createElement('tr');
-    tr.setAttribute('data-search', `${ticket.id} ${ticket.title} ${ticket.assignee_local} ${ticket.module}`.toLowerCase());
+    tr.setAttribute('data-search', `${ticket.id} ${ticket.title} ${ticket.assignee_local} ${ticket.module} ${ticket.folder || ''}`.toLowerCase());
 
     const liveInfo = liveKanban && liveKanban.kanbanMap ? liveKanban.kanbanMap[ticket.id] : null;
     const ghState = liveInfo ? liveInfo.status : (ticket.github_state || 'OPEN');
@@ -486,6 +567,7 @@ function renderAllTicketsTable() {
     tr.innerHTML = `
       <td><span class="ticket-id">${ticket.id}</span></td>
       <td><strong>${ticket.title}</strong></td>
+      <td><span class="meta-tag tag-folder">📁 ${ticket.folder || 'root'}</span></td>
       <td>${ticket.assignee_local}</td>
       <td><span class="ticket-hours-badge">${ticket.hours}h</span></td>
       <td><span style="font-size: 0.78rem; color: #94a3b8;">${ticket.sprint}</span></td>
@@ -542,7 +624,7 @@ function openDrawer(ticket) {
   drawerTitle.textContent = ticket.title;
 
   drawerDev.textContent = `${ticket.assignee_local} (${ticket.assignee_github_planned || 'Sin asignar'})`;
-  drawerSprint.textContent = ticket.sprint;
+  drawerSprint.textContent = `${ticket.sprint} (📁 ${ticket.folder || 'root'})`;
   drawerModule.textContent = `Módulo ${ticket.module}`;
   drawerLayer.textContent = ticket.layer;
   drawerDeps.textContent = (ticket.dependencies && ticket.dependencies.length > 0) ? ticket.dependencies.join(', ') : 'Ninguna';

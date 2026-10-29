@@ -67,8 +67,11 @@ function loadLocalTickets() {
     const content = fs.readFileSync(filePath, 'utf-8');
     const { metadata, body } = parseFrontmatter(content);
     const relPath = path.relative(ROOT_DIR, filePath).replace(/\\/g, '/');
+    const parts = relPath.split('/');
+    const folder = parts.length > 2 ? parts[1] : 'root';
     return {
       ...metadata,
+      folder,
       filePath: relPath,
       body,
     };
@@ -197,9 +200,9 @@ const server = http.createServer(async (req, res) => {
       tickets.forEach((t) => {
         let devKey = 'Unassigned';
         const assignee = (t.assignee_local || '').toLowerCase();
-        if (assignee.includes('tomi')) devKey = 'Tomi';
-        else if (assignee.includes('facu')) devKey = 'Facu';
-        else if (assignee.includes('lulo') || assignee.includes('luciano')) devKey = 'Lulo';
+        if (assignee.includes('tomi') || assignee.includes('tomas') || assignee.includes('tomás') || assignee.includes('bregoli')) devKey = 'Tomi';
+        else if (assignee.includes('facu') || assignee.includes('garcia') || assignee.includes('garcía')) devKey = 'Facu';
+        else if (assignee.includes('lulo') || assignee.includes('luciano') || assignee.includes('renkine')) devKey = 'Lulo';
 
         const isNextSprint = (t.sprint || '').startsWith('Sprint 22/10');
         const h = Number(t.hours) || 0;

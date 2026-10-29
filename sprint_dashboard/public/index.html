@@ -89,7 +89,7 @@
       <div class="metric-card card-sprint" id="metric-total">
         <div class="metric-header">
           <span class="dev-avatar total-avatar">🎯</span>
-          <span class="dev-name">Sprint 22 al 29 Oct</span>
+          <span class="dev-name" id="metric-title-total">Sprint 29/10 - 05/11</span>
           <span class="role-pill">Capacidad</span>
         </div>
         <div class="metric-body">
@@ -97,8 +97,33 @@
           <div class="progress-bar"><div class="progress-fill fill-total" id="progress-total" style="width: 100%"></div></div>
         </div>
         <div class="metric-footer">
-          <span id="count-total">12 tickets asignados</span>
+          <span id="count-total">11 tickets asignados</span>
           <span class="status-indicator success" id="status-total">Optimizada</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Folder / Sprint Selector Bar -->
+    <section class="folder-selector-bar" id="folder-selector-bar">
+      <div class="folder-selector-left">
+        <span class="folder-selector-label">📂 Sprint / Carpeta:</span>
+        <div class="folder-pills" role="radiogroup" aria-label="Seleccionar carpeta de tickets">
+          <button class="folder-pill active" data-folder="sprint_29_03_nov" id="pill-29-03">
+            <span>🚀 Sprint 29/10 - 05/11 (Nuevo)</span>
+            <span class="pill-count" id="count-pill-29-03">11</span>
+          </button>
+          <button class="folder-pill" data-folder="sprint_22_29_oct" id="pill-22-29">
+            <span>📅 Sprint 22/10 - 29/10</span>
+            <span class="pill-count" id="count-pill-22-29">12</span>
+          </button>
+          <button class="folder-pill" data-folder="active_sprint" id="pill-active">
+            <span>⚡ Tareas en Curso</span>
+            <span class="pill-count" id="count-pill-active">2</span>
+          </button>
+          <button class="folder-pill" data-folder="all" id="pill-all">
+            <span>📦 Todas las Carpetas</span>
+            <span class="pill-count" id="count-pill-all">25</span>
+          </button>
         </div>
       </div>
     </section>
@@ -116,7 +141,7 @@
           🧭 Gap Analysis & Roadmap
         </button>
         <button class="tab-btn" id="tab-btn-all" data-tab="all-tickets">
-          📦 Catálogo Completo (17)
+          📦 Catálogo Completo (<span id="tab-count-all">25</span>)
         </button>
         <a href="/comparativa-rubrica.html" target="_blank" class="tab-btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color:#818cf8; color:#e0e7ff; font-weight:600;">
           ✨ Comparativa Rúbrica (152, 166, 167) ↗
@@ -127,10 +152,13 @@
         <input type="text" id="input-search" class="search-input" placeholder="🔍 Buscar ticket, ID o módulo..." />
         <select id="select-filter-module" class="filter-select">
           <option value="all">Todos los módulos</option>
+          <option value="4.1.2">Módulo 4.1.2 (Cierre Examen)</option>
           <option value="4.4.1">Módulo 4.4.1 (Rúbricas & IA)</option>
           <option value="4.5.1">Módulo 4.5.1 (UI Auditoría)</option>
           <option value="4.5.2">Módulo 4.5.2 (Servicio Reintento)</option>
           <option value="4.5.3">Módulo 4.5.3 (Integración Auditoría)</option>
+          <option value="4.5.4">Módulo 4.5.4 (Aprobación Indiv.)</option>
+          <option value="1.3">Módulo 1.3 (KPI Cobertura CI)</option>
         </select>
       </div>
     </nav>
@@ -140,12 +168,12 @@
       
       <!-- TAB 1: Tablero por Desarrollador (Next Week) -->
       <section class="tab-pane active" id="pane-devs-board">
-        <div class="sprint-header-banner">
+        <div class="sprint-header-banner" id="sprint-header-banner">
           <div>
-            <h2>Sprint Plan: 22 de Octubre al 29 de Octubre de 2026</h2>
-            <p><strong>18.0 horas comprometidas</strong> (6.0 hs c/u: Tomi, Facu, Lulo) en <strong>12 tickets</strong> · <em>(Los otros 3 tickets en Backlog en GitHub corresponden al sprint siguiente del 29/10: Reintento Masivo)</em>.</p>
+            <h2 id="sprint-banner-title">Sprint Plan: 29 de Octubre al 5 de Noviembre de 2026</h2>
+            <p id="sprint-banner-desc"><strong>18.0 horas comprometidas</strong> (6.0 hs c/u: Tomi, Facu, Lulo) en <strong>11 tickets</strong> · Cierre de Exámenes, Aprobación Individual y Reintentos Masivos.</p>
           </div>
-          <div class="banner-badge">Semana Clave (22-29 Oct)</div>
+          <div class="banner-badge" id="sprint-banner-badge">Sprint 29/10 - 05/11</div>
         </div>
 
         <!-- Active Sprint (This week until 22/10) -->
@@ -354,7 +382,7 @@
       <!-- TAB 4: Catálogo Completo de Tickets -->
       <section class="tab-pane" id="pane-all-tickets">
         <div class="catalog-header">
-          <h2>Todos los Tickets Locales Estructurados (16 tickets)</h2>
+          <h2>Todos los Tickets Locales Estructurados (<span id="catalog-total-count">25 tickets</span>)</h2>
           <p>Repositorio local completo con especificaciones, estimaciones y enlaces directos a GitHub.</p>
         </div>
 
@@ -364,6 +392,7 @@
               <tr>
                 <th>ID / Repo</th>
                 <th>Título</th>
+                <th>Carpeta</th>
                 <th>Dev Asignado</th>
                 <th>Horas</th>
                 <th>Sprint</th>
